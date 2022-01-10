@@ -13,6 +13,7 @@ resource "aws_instance" "proxied_windows_server" {
 
     [Environment]::SetEnvironmentVariable("http_proxy","http://${aws_instance.proxy_server[0].private_ip}:8080","Machine")
     [Environment]::SetEnvironmentVariable("https_proxy","http://${aws_instance.proxy_server[0].private_ip}:8080","Machine")
+    [Environment]::SetEnvironmentVariable("no_proxy","169.254.169.254","Machine")
     netsh winhttp set proxy "${aws_instance.proxy_server[0].private_ip}:8080"
 
     Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' -name ProxyServer -Value "http://${aws_instance.proxy_server[0].private_ip}:8080"
@@ -33,9 +34,32 @@ resource "aws_instance" "proxied_windows_server" {
     New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_MEMORY_TOTAL_MIB' -Value "512"
     New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_REALM' -Value ${var.realm}
     New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_TRACE_URL' -Value "https://ingest.${var.realm}.signalfx.com/v2/trace"
-
-    Invoke-WebRequest -Uri ${var.windows_proxied_server_agent_url} -OutFile "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
+    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_HEC_TOKEN' -Value ${var.access_token}
+    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_HEC_URL' -Value "https://ingest.eu0.signalfx.com/v1/log"
+    
+    $source = "${var.windows_proxied_server_agent_url}"
+    $dest = "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
+    $WebClient.DownloadFile($source,$dest)
     Start-Service splunk-otel-collector
+
+    $source = "${var.windows_fluentd_url}"
+    $dest = "C:\Windows\Temp\td-agent.msi"
+    $WebClient.DownloadFile($source,$dest)
+    Start-Process msiexec.exe -Wait '/I C:\Windows\Temp\td-agent.msi /quiet'
+    
+    Stop-Service fluentdwinsvc
+
+    $source = "${var.windows_tdagent_conf_url}"
+    $dest = "C:\opt\td-agent\etc\td-agent\td-agent.conf"
+    $WebClient.DownloadFile($source,$dest)
+    
+    New-Item -Path 'C:\opt\td-agent\etc\td-agent\conf.d' -ItemType Directory
+
+    $source = "${var.windows_eventlog_conf_url}"
+    $dest = "C:\opt\td-agent\etc\td-agent\conf.d\eventlog.conf"
+    $WebClient.DownloadFile($source,$dest)
+
+    Start-Service fluentdwinsvc
   </powershell>
   
   EOF
