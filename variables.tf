@@ -62,7 +62,7 @@ variable "subnet_count" {
 variable "key_name" {
   default = []
 }
-variable "private_key_path"{
+variable "private_key_path" {
   default = []
 }
 variable "instance_type" {
@@ -76,14 +76,14 @@ variable "ms_sql_instance_type" {
 }
 variable "ms_sql_agent_url" {
   description = "Path to the agent file to be used for MS SQL Servers"
-  default     = {}  
+  default     = {}
 }
 variable "windows_server_instance_type" {
   default = []
 }
 variable "windows_server_agent_url" {
   description = "Path to the agent file to be used for Windows Servers"
-  default     = {}  
+  default     = {}
 }
 variable "aws_api_gateway_deployment_retailorder_invoke_url" {
   default = {}
@@ -102,7 +102,7 @@ variable "eks_fargate_cluster_name" {
 ## AWS_ECS Variables ##
 variable "ecs_agent_url" {
   description = "Path to the agent file to be used for ecs"
-  default     = {}  
+  default     = {}
 }
 variable "ecs_app_port" {
   description = "Port exposed by the docker image to redirect traffic to"
@@ -114,7 +114,7 @@ variable "ecs_az_count" {
 }
 variable "ecs_health_check_path" {
   description = "Path used by ALB for Health Checks"
-  default = "/"
+  default     = "/"
 }
 variable "ecs_app_image" {
   description = "Docker image to run in the ECS cluster"
@@ -143,7 +143,7 @@ data "aws_ami" "latest-ubuntu" {
   owners      = ["099720109477"] # This is the owner id of Canonical who owns the official aws ubuntu images
 
   filter {
-    name   = "name"
+    name = "name"
     # values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
@@ -230,7 +230,7 @@ variable "ms_sql_user_pwd" {
   default = []
 }
 variable "ms_sql_administrator_pwd" {
-  default =[]
+  default = []
 }
 variable "windows_server_count" {
   default = {}
@@ -239,7 +239,7 @@ variable "windows_server_ids" {
   default = []
 }
 variable "windows_server_administrator_pwd" {
-  default =[]
+  default = []
 }
 variable "apache_web_count" {
   default = {}
@@ -291,49 +291,49 @@ variable "region" {
 
 variable "aws_region" {
   description = "Provide the desired region"
-    default = {
-      "1" = "eu-west-1"
-      "2" = "eu-west-3"
-      "3" = "eu-central-1"
-      "4" = "us-east-1"
-      "5" = "us-east-2"
-      "6" = "us-west-1"
-      "7" = "us-west-2"
-      "8" = "ap-southeast-1"
-      "9" = "ap-southeast-2"
-      "10" = "sa-east-1"
-    }
+  default = {
+    "1"  = "eu-west-1"
+    "2"  = "eu-west-3"
+    "3"  = "eu-central-1"
+    "4"  = "us-east-1"
+    "5"  = "us-east-2"
+    "6"  = "us-west-1"
+    "7"  = "us-west-2"
+    "8"  = "ap-southeast-1"
+    "9"  = "ap-southeast-2"
+    "10" = "sa-east-1"
+  }
 }
 
 ## List available at https://github.com/signalfx/lambda-layer-versions/blob/master/python/PYTHON.md ##
 variable "region_wrapper_python" {
   default = {
-    "1" = "arn:aws:lambda:eu-west-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "2" = "arn:aws:lambda:eu-west-3:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "3" = "arn:aws:lambda:ca-central-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "4" = "arn:aws:lambda:us-east-1:254067382080:layer:signalfx-lambda-python-wrapper:17"
-    "5" = "arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-python-wrapper:18"
-    "6" = "arn:aws:lambda:us-west-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "7" = "arn:aws:lambda:us-west-2:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "8" = "arn:aws:lambda:ap-southeast-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "9" = "arn:aws:lambda:ap-southeast-2:254067382080:layer:signalfx-lambda-python-wrapper:16"
-    "10" = "arn:aws:lambda:sa-east-1:254067382080:layer:signalfx-lambda-python-wrapper:16"  
+    "1"  = "arn:aws:lambda:eu-west-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "2"  = "arn:aws:lambda:eu-west-3:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "3"  = "arn:aws:lambda:ca-central-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "4"  = "arn:aws:lambda:us-east-1:254067382080:layer:signalfx-lambda-python-wrapper:17"
+    "5"  = "arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-python-wrapper:18"
+    "6"  = "arn:aws:lambda:us-west-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "7"  = "arn:aws:lambda:us-west-2:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "8"  = "arn:aws:lambda:ap-southeast-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "9"  = "arn:aws:lambda:ap-southeast-2:254067382080:layer:signalfx-lambda-python-wrapper:16"
+    "10" = "arn:aws:lambda:sa-east-1:254067382080:layer:signalfx-lambda-python-wrapper:16"
   }
 }
 
 ## List available at https://github.com/signalfx/lambda-layer-versions/blob/master/node/NODE.md ##
 variable "region_wrapper_nodejs" {
   default = {
-    "1" = "arn:aws:lambda:eu-west-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
-    "2" = "arn:aws:lambda:eu-west-3:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
-    "3" = "arn:aws:lambda:eu-central-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
-    "4" = "arn:aws:lambda:us-east-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
-    "5" = "arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
-    "6" = "arn:aws:lambda:us-west-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
-    "7" = "arn:aws:lambda:us-west-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
-    "8" = "arn:aws:lambda:ap-southeast-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
-    "9" = "arn:aws:lambda:ap-southeast-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
-    "10" = "arn:aws:lambda:sa-east-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"  
+    "1"  = "arn:aws:lambda:eu-west-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
+    "2"  = "arn:aws:lambda:eu-west-3:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
+    "3"  = "arn:aws:lambda:eu-central-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
+    "4"  = "arn:aws:lambda:us-east-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
+    "5"  = "arn:aws:lambda:us-east-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
+    "6"  = "arn:aws:lambda:us-west-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
+    "7"  = "arn:aws:lambda:us-west-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:25"
+    "8"  = "arn:aws:lambda:ap-southeast-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
+    "9"  = "arn:aws:lambda:ap-southeast-2:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
+    "10" = "arn:aws:lambda:sa-east-1:254067382080:layer:signalfx-lambda-nodejs-wrapper:24"
   }
 }
 
@@ -363,19 +363,28 @@ variable "smart_agent_version" {
   default = []
 }
 variable "environment" {
-  default = []
+  default = {}
 }
 variable "otelcol_version" {
-  default = []
+  default = {}
 }
 variable "windows_msi_url" {
-  default = []
+  default = {}
+}
+variable "windows_fluentd_url" {
+  default = {}
+}
+variable "windows_tdagent_conf_url" {
+  default = {}
+}
+variable "windows_eventlog_conf_url" {
+  default = {}
 }
 variable "windows_proxied_server_agent_url" {
   default = {}
 }
 variable "collector_version" {
-  default = []
+  default = {}
 }
 variable "detector_promoting_tags_id" {
   default = {}
