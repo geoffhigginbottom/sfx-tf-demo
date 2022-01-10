@@ -110,6 +110,11 @@ receivers:
     exe: dockerd.exe
     pattern: docker
     WinService: docker
+  smartagent/procstat-otel:
+    type: telegraf/procstat
+    exe: otelcol.exe
+    pattern: otel
+    WinService: splunk-otel-collector
 
 processors:
   batch:
