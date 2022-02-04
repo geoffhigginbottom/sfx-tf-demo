@@ -4,7 +4,7 @@
 PASSWORD=$1
 VERSION=$2
 FILENAME=$3
-LICENSE_FILE=$4
+LICENSE_FILE=$6rt44
 
 wget -O /tmp/$FILENAME "https://download.splunk.com/products/splunk/releases/$VERSION/linux/$FILENAME"
 sudo dpkg -i /tmp/$FILENAME
@@ -23,7 +23,7 @@ JAVA_HOME=$(realpath /usr/bin/java)
 sudo /opt/splunk/bin/splunk stop
 
 # install apps
-tar -xvf /tmp/splunk-it-service-intelligence_493.spl -C /opt/splunk/etc/apps
+tar -xvf /tmp/splunk-it-service-intelligence_4113.spl -C /opt/splunk/etc/apps
 tar -xvf /tmp/splunk-infrastructure-monitoring-add-on_121.tgz -C /opt/splunk/etc/apps
 tar -xvf /tmp/splunk-synthetic-monitoring-add-on_107.tgz -C /opt/splunk/etc/apps
 tar -xvf /tmp/splunk-app-for-content-packs_140.spl -C /opt/splunk/etc/apps
@@ -39,3 +39,6 @@ sudo chmod 755 -R /opt/splunk/etc/apps/itsi/local
 
 # Add Modular Input
 sudo cat /tmp/inputs.conf >> /opt/splunk/etc/apps/itsi/local/inputs.conf
+
+# restart splunk
+/opt/splunk/bin/splunk restart

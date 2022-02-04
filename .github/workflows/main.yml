@@ -1,0 +1,39 @@
+name: Deploy Workshop
+
+# Controls when the action will run. Triggers manually
+on: workflow_dispatch
+
+jobs:
+  build:
+    name: Deploy O11y Workshop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Bumpversion and deploy using mike
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git pull --rebase
+          FLAVOUR=minor
+          TAG=$(bumpversion --list "$FLAVOUR" | awk -F= '/new_version=/ { print $2 }')
+          git fetch --tags origin
+          git tag -a "v$TAG" -m "Version $TAG"
+          git push --follow-tags origin standalone || { echo 'Push failed. git pull --rebase from upstream and attempt another release.'; exit 1; }
+          git fetch origin gh-pages
+          mike deploy --push --update-aliases v${TAG} latest
+
+          

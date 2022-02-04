@@ -4,84 +4,8 @@
 # can choose to store the information in here, or enter it at run time.
 
 ## Enable / Disable Modules ##
-eks_cluster_enabled         = false
-ecs_cluster_enabled         = false
-instances_enabled           = false
-proxied_instances_enabled   = false
+## o11y workshop is not yet part of the set up ##
 itsi_o11y_cp_enabled        = false
-phone_shop_enabled          = false
-lambda_sqs_dynamodb_enabled = false
-dashboards_enabled          = false
-detectors_enabled           = false
-
-## Instance Quantities ##
-collector_count = "2" # min 1 : max = subnet_count - there should always be at least one as Target Groups require one
-collector_ids = [
-  "Collector1",
-  "Collector2",
-  "Collector3"
-  ]
-
-haproxy_count = "1" # min 0 : max = subnet_count
-haproxy_ids = [
-  "haproxy1",
-  "haproxy2",
-  "haproxy3"
-  ]
-
-mysql_count = "1" # min 0 : max = subnet_count
-mysql_ids = [
-  "mysql1",
-  "mysql2",
-  "mysql3"
-  ]
-
-ms_sql_count = "1" # min 0 : max = subnet_count
-ms_sql_ids = [
-  "ms_sql1",
-  "ms_sql2",
-  "ms_sql3"
-  ]
-
-windows_server_count = "1" # min 0 : max = subnet_count
-windows_server_ids = [
-  "windows1",
-  "windows2",
-  "windows3"
-  ]
-
-apache_web_count = "1" # min 0 : max = subnet_count
-apache_web_ids = [
-  "apache1",
-  "apache2",
-  "apache3"
-  ]
-
-splunk_ent_count = "1" # min 0 : max = 1 as only one is required, used as a yes/no parameter
-splunk_ent_ids = [
-  "splunk-ent"
-  ]
-
-## Proxied Instances Quantities ##
-
-proxy_server_count = "1" # min 0 : max = 1 as only one is required, used as a yes/no parameter
-proxy_server_ids = [
-  "proxy-server"
-  ]
-
-proxied_apache_web_count = "1" # min 0 : max = subnet_count
-proxied_apache_web_ids = [
-  "proxied-apache_1",
-  "proxied-apache_2",
-  "proxied-apache_3"
-  ]
-
-proxied_windows_server_count = "1" # min 0 : max = subnet_count
-proxied_windows_server_ids = [
-  "proxied-windows1",
-  "proxied-windows2",
-  "proxied-windows3"
-  ]
 
 ## ITSI Quantities ##
 
@@ -90,7 +14,7 @@ splunk_itsi_ids = [
   "splunk-itsi"
   ]
 
-### AWS Variables ###
+### AWS Variables###
 #region = "<REGION>"
 
 ## VPC Settings ##
@@ -104,52 +28,19 @@ instance_type           = "t2.micro"
 aws_access_key_id       = "<ACCCESS_KEY_ID>>"
 aws_secret_access_key   = "<SECRET_ACCESS_KEY>>"
 
-### SOC Variables ###
-soc_integration_id      = "<ID>"
-soc_routing_key         = "<ROUTING_KEY>"
-
 ### Splunk IM/APM Variables ###
 access_token             = "<ACCESS_TOKEN>"
 api_url                  = "https://api.<REALM>.signalfx.com"
 realm                    = "<REALM>"
 environment              = "<ENVIRONMENT>"
-notification_email       = "<EMAIL>"
-smart_agent_version      = "" # Optional - If left blank, latest will be installed - example value would be "5.7.1-1"
-ecs_agent_url            = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/aws_ecs/agent_fargate.yaml"
-ms_sql_agent_url         = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/Master/modules/instances/config_files/ms_sql_agent_config.yaml"
-windows_server_agent_url = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/Master/modules/instances/config_files/windows_server_agent_config.yaml"
-collector_version        = "0.40.0"
-
-### Collector Variables ###
-### https://quay.io/repository/signalfx/splunk-otel-collector?tab=tags
-collector_instance_type      = "t2.small"
-
-### Splunk Enterprise Variables ###
-splunk_ent_filename     = "splunk-8.2.3-cd0848707637-linux-2.6-amd64"
-splunk_ent_version      = "8.2.3"
-splunk_ent_inst_type    = "t2.large"
 
 ### Splunk ITSI Variables ###
-splunk_itsi_inst_type                             = "t2.large"
+splunk_itsi_inst_type                             = "t3.xlarge"
 splunk_itsi_version                               = "8.2.3"
 splunk_itsi_filename                              = "splunk-8.2.3-cd0848707637-linux-2.6-amd64.deb"
-splunk_itsi_files_local_path                      = "~/Downloads" # path where itsi files resides on your local machine 
+splunk_itsi_files_local_path                      = "~/Downloads" # path where itsi files resides on your local machine | on Windows %USERPROFILE%\Downloads
 splunk_itsi_license_filename                      = "Splunk_ITSI_NFR_FY23.lic" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
 splunk_app_for_content_packs_filename             = "splunk-app-for-content-packs_140.spl" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
 splunk_it_service_intelligence_filename           = "splunk-it-service-intelligence_493.spl" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
 splunk_synthetic_monitoring_add_on_filename       = "splunk-synthetic-monitoring-add-on_107.tgz" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
 splunk_infrastructure_monitoring_add_on_filename  = "splunk-infrastructure-monitoring-add-on_121.tgz" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
-
-### MS SQL Server Variables ###
-ms_sql_user                   = "signalfxagent"
-ms_sql_user_pwd               = "<STRONG_PWD>"
-ms_sql_administrator_pwd      = "<STRONG_PWD>"
-ms_sql_instance_type          = "t3.xlarge"
-
-### Windows Server Variables ###
-windows_server_administrator_pwd  = "<STRONG_PWD>"
-windows_server_instance_type      = "t3.xlarge"
-
-### MySQL Server Variables ###
-mysql_user             = "signalfxagent"
-mysql_user_pwd         = "<STRONG_PWD>"

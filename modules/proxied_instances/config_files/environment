@@ -1,4 +1,0 @@
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
-http_proxy=http://172.32.3.140:8080/
-https_proxy=http://172.32.3.140:8080/
-no_proxy=169.254.169.254

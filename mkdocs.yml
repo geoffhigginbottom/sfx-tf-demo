@@ -1,0 +1,102 @@
+site_name: Splunk Observability Bootcamp
+site_url: https://ismaelkp2.github.io/sfx-tf-demo/
+site_author: Sales Engineering EMEA
+site_description: >-
+  This bootcamp will show you a journey from a monolithic service to a
+  microservices-based observable solution using Splunk's best-in-class
+  observability platform for ingesting, monitoring, visualizing and analyzing
+  metrics, traces and spans.
+
+repo_name: ismaelkp2/sfx-tf-demo
+repo_url: https://ismaelkp2.github.io/sfx-tf-demo/
+edit_uri: ""
+copyright: Copyright &copy; 2021 Splunk Inc. All rights reserved.
+remote_branch: gh-pages
+
+theme:
+  name: material
+  custom_dir: !ENV [THEME_DIR, "overrides"]
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  favicon: images/favicon.ico
+  logo: images/logo.png
+  font:
+    text: "Century Gothic"
+    code: Roboto Mono
+  include_search_page: false
+  search_index_only: true
+  language: en
+  features:
+    - content.code.annotate
+    - navigation.indexes
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+
+markdown_extensions:
+  - footnotes
+  - admonition
+  - attr_list
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.mark
+  - pymdownx.critic
+  - pymdownx.keys
+  - meta
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/signalfx/observability-workshop
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/splunk
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/splunk/
+  version:
+    provider: mike
+  alternate:
+    # Switch to English
+    - name: English
+      link: ./en/
+      lang: en
+
+plugins:
+  - git-revision-date-localized:
+      type: date
+  - i18n:
+      default_language: en
+      languages:
+        en: English
+      nav_translations:
+
+nav:
+  - Observability Bootcamp: index.md
+  - "LAB ITSI content_pack ": tml/LAB_instructions_content_pack.md

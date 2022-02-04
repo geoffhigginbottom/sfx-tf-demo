@@ -11,7 +11,7 @@ resource "aws_instance" "splunk_itsi" {
   subnet_id                 = element(var.public_subnet_ids, count.index)
     root_block_device {
     volume_size = 32
-    volume_type = "gp2"
+    volume_type = "gp3"
   }
   key_name                  = var.key_name
   vpc_security_group_ids    = [
