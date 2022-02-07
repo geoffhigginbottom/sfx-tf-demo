@@ -49,7 +49,7 @@ resource "aws_instance" "apache_web" {
       "TOKEN=${var.access_token}",
       "REALM=${var.realm}",
       "HOSTNAME=${self.tags.Name}",
-      "LBURL=${aws_lb.collector-lb.dns_name}",
+      "LBURL=${aws_lb.gateway-lb.dns_name}",
    
     ## Install Apache
       "sudo chmod +x /tmp/install_apache_web_server.sh",

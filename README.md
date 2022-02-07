@@ -38,7 +38,7 @@ You will find more information about each Module at the end of this document.
 
 There are generally no interdependencies between modules, so you can deploy almost any combination, but if enabling Dashboards, you should also enable Detectors.  The 'EKS Cluster', 'ECS Cluster' and 'Phone Shop' modules all have APM enabled and are instrumented to emit Traces.
 
-The quantities of each EC2 Instance deployed as part of the 'Instances & Proxied Instances' Modules are also controlled here. You can deploy between 0 & 3 of most types, but you should always deploy at least 1 Collector (Instances Module), which gets deployed behind an AWS ALB, and is used by the Instances to send in their metrics to the Splunk IM Platform.
+The quantities of each EC2 Instance deployed as part of the 'Instances & Proxied Instances' Modules are also controlled here. You can deploy between 0 & 3 of most types, but you should always deploy at least 1 Gateway (Instances Module), which gets deployed behind an AWS ALB, and is used by the Instances to send in their metrics to the Splunk IM Platform.
 
 ```yaml
 # This file contains all the settings which are unique to each deployment and it
@@ -58,11 +58,11 @@ dashboards_enabled          = false
 detectors_enabled           = false
 
 ## Instance Quantities ##
-collector_count = "2" # min 1 : max = subnet_count - there should always be at least one as Target Groups require one
-collector_ids = [
-  "Collector1",
-  "Collector2",
-  "Collector3"
+gateway_count = "2" # min 1 : max = subnet_count - there should always be at least one as Target Groups require one
+gateway_ids = [
+  "gateway1",
+  "gateway2",
+  "gateway3"
   ]
 
 haproxy_count = "1" # min 0 : max = subnet_count
@@ -209,14 +209,14 @@ windows_server_agent_url = "https://raw.githubusercontent.com/geoffhigginbottom/
 collector_version        = "0.40.0"
 ```
 
-### Collector Variables
+### Gateway Variables
 
-One or more OpenTelemetry Collectors are deployed as part of the Instances Module, behind an ELB, and are configured for both IM and APM.
+One or more OpenTelemetry Gateways are deployed as part of the Instances Module, behind an ELB, and are configured for both IM and APM.
 
 ```yaml
-### Collector Variables ###
+### Gateway Variables ###
 ### https://quay.io/repository/signalfx/splunk-otel-collector?tab=tags
-collector_instance_type = "t2.small"
+gateway_instance_type = "t2.small"
 ```
 
 ### Splunk Enterprise Variables
@@ -289,7 +289,7 @@ This module deploys some example EC2 Instances, with Splunk IM Monitors matching
 
 The following EC2 Instances can be deployed:
 
-- Collectors
+- Gateways
 - HAProxy
 - MySQL
 - Microsoft SQL Server

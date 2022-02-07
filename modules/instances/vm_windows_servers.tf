@@ -5,7 +5,6 @@ resource "aws_instance" "windows_server" {
   subnet_id                 = element(var.public_subnet_ids, count.index)
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
-  # get_password_data         = "true"
 
   user_data = <<EOF
   <powershell>
@@ -19,7 +18,7 @@ resource "aws_instance" "windows_server" {
     mode = "agent"};
     Invoke-Command -ScriptBlock ([scriptblock]::Create(". {$script} $(&{$args} @params)"))}
 
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_GATEWAY_URL' -Value ${aws_lb.collector-lb.dns_name}
+    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_GATEWAY_URL' -Value ${aws_lb.gateway-lb.dns_name}
 
     Invoke-WebRequest -Uri ${var.windows_server_agent_url} -OutFile "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
     Stop-Service splunk-otel-collector

@@ -15,7 +15,8 @@ extensions:
     # In general, the ballast should be set to 1/3 of the collector's memory, the limit
     # should be 90% of the collector's memory.
     # The simplest way to specify the ballast size is set the value of SPLUNK_BALLAST_SIZE_MIB env variable.
-    size_mib: ${SPLUNK_BALLAST_SIZE_MIB}
+    # size_mib: ${SPLUNK_BALLAST_SIZE_MIB}
+    size_in_percentage: 33
 
 receivers:
     # GH Added Logs and Host Metrics Receiver to enable collection from the Gateway itself
@@ -98,10 +99,18 @@ processors:
         #value: staging/production/...
         #key: deployment.environment
 
+  # Detect if the collector is running on a cloud system, which is important for creating unique cloud provider dimensions.
+  # Detector order is important: the `system` detector goes last so it can't preclude cloud detectors from setting host/os info.
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#ordering
+  # GH Added to enable collection from the Gateway itself
+  resourcedetection:
+    detectors: [gce, ecs, ec2, azure, system]
+    override: false
+
   # detect if the collector is running on a cloud system.
   # overrides resource attributes set by receivers
   resourcedetection/internal:
-    detectors: [system, gce, ecs, ec2, azure]
+    detectors: [gce, ecs, ec2, azure, system]
     override: true
 
 exporters:
@@ -121,7 +130,7 @@ exporters:
   #logging:
     #loglevel: debug
   
-  # GH Added Logs and Host Metrics Receiver to enable collection from the Gateway itself
+  # GH Added splunk_hec to enable collection from the Gateway itself
   # Logs
   splunk_hec:
     token: "${SPLUNK_HEC_TOKEN}"
@@ -137,11 +146,12 @@ service:
       processors:
       - memory_limiter
       - batch
+      - resourcedetection
       #- resource/add_environment
       exporters: [sapm, signalfx]
     metrics:
       receivers: [otlp, hostmetrics, signalfx]
-      processors: [memory_limiter, batch]
+      processors: [memory_limiter, batch, resourcedetection]
       exporters: [signalfx]
     metrics/internal:
       receivers: [prometheus/internal]
@@ -149,5 +159,5 @@ service:
       exporters: [signalfx]
     logs:
       receivers: [otlp, signalfx]
-      processors: [memory_limiter, batch]
+      processors: [memory_limiter, batch, resourcedetection]
       exporters: [splunk_hec]

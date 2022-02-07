@@ -1,13 +1,13 @@
-resource "aws_instance" "collector" {
-  count                     = var.collector_count
+resource "aws_instance" "gateway" {
+  count                     = var.gateway_count
   ami                       = var.ami
-  instance_type             = var.collector_instance_type
+  instance_type             = var.gateway_instance_type
   subnet_id                 = element(var.public_subnet_ids, count.index)
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.collector_ids, count.index)]))
+    Name = lower(join("_",[var.environment,element(var.gateway_ids, count.index)]))
     role = "collector"
   }
 
@@ -54,10 +54,10 @@ resource "aws_instance" "collector" {
   }
 }
 
-output "collector_details" {
+output "gateway_details" {
   value =  formatlist(
     "%s, %s", 
-    aws_instance.collector.*.tags.Name,
-    aws_instance.collector.*.public_ip,
+    aws_instance.gateway.*.tags.Name,
+    aws_instance.gateway.*.public_ip,
   )
 }
