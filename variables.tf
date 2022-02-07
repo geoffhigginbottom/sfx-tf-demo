@@ -68,7 +68,7 @@ variable "private_key_path" {
 variable "instance_type" {
   default = []
 }
-variable "collector_instance_type" {
+variable "gateway_instance_type" {
   default = []
 }
 variable "ms_sql_instance_type" {
@@ -193,10 +193,10 @@ data "aws_ami" "windows-server" {
 
 
 ### Instance Count Variables ###
-variable "collector_count" {
+variable "gateway_count" {
   default = {}
 }
-variable "collector_ids" {
+variable "gateway_ids" {
   default = []
 }
 variable "haproxy_count" {

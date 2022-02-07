@@ -5,7 +5,6 @@ resource "aws_instance" "ms_sql" {
   subnet_id                 = element(var.public_subnet_ids, count.index)
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
-  # get_password_data         = "true"
 
   user_data = <<EOF
   <powershell>
@@ -33,7 +32,7 @@ resource "aws_instance" "ms_sql" {
 
     New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_SQL_USER' -Value ${var.ms_sql_user}
     New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_SQL_USER_PWD' -Value ${var.ms_sql_user_pwd}
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_GATEWAY_URL' -Value ${aws_lb.collector-lb.dns_name}
+    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_GATEWAY_URL' -Value ${aws_lb.gateway-lb.dns_name}
 
     Invoke-WebRequest -Uri ${var.ms_sql_agent_url} -OutFile "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
     Stop-Service splunk-otel-collector
@@ -42,40 +41,10 @@ resource "aws_instance" "ms_sql" {
   </powershell>
   EOF
 
-
-
-    # Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_API_URL' -Value http://${aws_lb.collector-lb.dns_name}:6060
-    # Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_INGEST_URL' -Value http://${aws_lb.collector-lb.dns_name}:9943
-    # Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_TRACE_URL' -Value http://${aws_lb.collector-lb.dns_name}:7276/v2/trace
-    # Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_HEC_URL' -Value http://${aws_lb.collector-lb.dns_name}:9943/v1/log
-
-    # Invoke-WebRequest -Uri "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/instances/config_files/ms_sql_agent_config.yaml" -OutFile "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
-
   tags = {
     Name = lower(join("_",[var.environment,element(var.ms_sql_ids, count.index)]))
   }
-
-  # provisioner "local-exec" {
-  #   command = "TF_VAR_branch=$(git rev-parse --abbrev-ref HEAD)"
-  # }
-
-
-  # provisioner "file" {
-  #   source      = "${path.module}/config_files/ms_sql_agent_config.yaml"
-  #   destination = "C:/Users/Administrator/agent_config.yaml"
-  # }
-
-  # connection {
-  #   type     = "winrm"
-  #   user     = "Administrator"
-  #   # password = aws_instance.ms_sql : rsadecrypt(password_data,file(var.private_key_path))
-  #   # password = for g in aws_instance.ms_sql : rsadecrypt(g.password_data,file(var.private_key_path))
-  #   password = "f7t67G^&(g78g^&)"
-  #   host = self.public_ip
-  # }
 }
-
-
 
 output "ms_sql_details" {
   value =  formatlist(
@@ -86,10 +55,3 @@ output "ms_sql_details" {
     
   )
 }
-
-# output "Administrator_Password" {
-#    value = [
-#      for g in aws_instance.ms_sql : rsadecrypt(g.password_data,file(var.private_key_path))
-#    ]
-#  }
- 

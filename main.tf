@@ -177,10 +177,10 @@ module "instances" {
   key_name                         = var.key_name
   private_key_path                 = var.private_key_path
   instance_type                    = var.instance_type
-  collector_instance_type          = var.collector_instance_type
+  gateway_instance_type            = var.gateway_instance_type
   ami                              = data.aws_ami.latest-ubuntu.id
-  collector_count                  = var.collector_count
-  collector_ids                    = var.collector_ids
+  gateway_count                    = var.gateway_count
+  gateway_ids                      = var.gateway_ids
   haproxy_count                    = var.haproxy_count
   haproxy_ids                      = var.haproxy_ids
   mysql_count                      = var.mysql_count
@@ -224,7 +224,6 @@ module "itsi_o11y_cp" {
   key_name                                         = var.key_name
   private_key_path                                 = var.private_key_path
   instance_type                                    = var.instance_type
-  collector_instance_type                          = var.collector_instance_type
   ami                                              = data.aws_ami.latest-ubuntu.id
   splunk_itsi_count                                = var.splunk_itsi_count
   splunk_itsi_ids                                  = var.splunk_itsi_ids
@@ -241,7 +240,7 @@ module "itsi_o11y_cp" {
 
 ### Instances Outputs ###
 output "OTEL_Gateway_Servers" {
-  value = var.instances_enabled ? module.instances.*.collector_details : null
+  value = var.instances_enabled ? module.instances.*.gateway_details : null
 }
 output "HAProxy_Servers" {
   value = var.instances_enabled ? module.instances.*.haproxy_details : null
@@ -256,7 +255,7 @@ output "Apache_Web_Servers" {
   value = var.instances_enabled ? module.instances.*.apache_web_details : null
 }
 output "collector_lb_dns" {
-  value = var.instances_enabled ? module.instances.*.collector_lb_int_dns : null
+  value = var.instances_enabled ? module.instances.*.gateway_lb_int_dns : null
 }
 output "SQS_Test_Server" {
   value = var.lambda_sqs_dynamodb_enabled ? module.lambda_sqs_dynamodb.*.sqs_test_server_details : null

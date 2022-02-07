@@ -50,7 +50,7 @@ resource "aws_instance" "haproxy" {
       "TOKEN=${var.access_token}",
       "REALM=${var.realm}",
       "HOSTNAME=${self.tags.Name}",
-      "LBURL=${aws_lb.collector-lb.dns_name}",
+      "LBURL=${aws_lb.gateway-lb.dns_name}",
       
     ## Install HA Proxy
       "sudo chmod +x /tmp/install_haproxy.sh",

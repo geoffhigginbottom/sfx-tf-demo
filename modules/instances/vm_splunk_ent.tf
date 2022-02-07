@@ -48,7 +48,7 @@ resource "aws_instance" "splunk_ent" {
       "TOKEN=${var.access_token}",
       "REALM=${var.realm}",
       "HOSTNAME=${self.tags.Name}",
-      "LBURL=${aws_lb.collector-lb.dns_name}",
+      "LBURL=${aws_lb.gateway-lb.dns_name}",
       
     ## Create Splunk Ent Vars
       "SPLUNK_PASSWORD=${random_string.splunk_password.result}",
