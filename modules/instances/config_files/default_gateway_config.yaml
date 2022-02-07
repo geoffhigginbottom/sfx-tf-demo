@@ -33,7 +33,7 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:4317
       http:
-        endpoint: 0.0.0.0:55681
+        endpoint: 0.0.0.0:4318
   # This section is used to collect the OpenTelemetry Collector metrics
   # Even if just a Splunk APM customer, these metrics are included
   prometheus/internal:
@@ -49,8 +49,14 @@ receivers:
             action: drop
   sapm:
     endpoint: 0.0.0.0:7276
+    # Whether to preserve incoming access token and use instead of exporter token
+    # default = false
+    #access_token_passthrough: true
   signalfx:
     endpoint: 0.0.0.0:9943
+    # Whether to preserve incoming access token and use instead of exporter token
+    # default = false
+    #access_token_passthrough: true
   zipkin:
     endpoint: 0.0.0.0:9411
 
@@ -76,7 +82,7 @@ processors:
   # detect if the collector is running on a cloud system.
   # overrides resource attributes set by receivers
   resourcedetection/internal:
-    detectors: [system, gce, ecs, ec2, azure]
+    detectors: [gce, ecs, ec2, azure, system]
     override: true
 
 exporters:
@@ -115,6 +121,6 @@ service:
       processors: [memory_limiter, batch, resourcedetection/internal]
       exporters: [signalfx]
     logs:
-      receivers: [signalfx]
+      receivers: [otlp, signalfx]
       processors: [memory_limiter, batch]
       exporters: [signalfx]
