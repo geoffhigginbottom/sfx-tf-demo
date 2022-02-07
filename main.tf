@@ -1,13 +1,13 @@
 # AWS Auth Configuration
 provider "aws" {
-  region                  = lookup(var.aws_region, var.region)
-  access_key              = var.aws_access_key_id
-  secret_key              = var.aws_secret_access_key
+  region     = lookup(var.aws_region, var.region)
+  access_key = var.aws_access_key_id
+  secret_key = var.aws_secret_access_key
 }
 
 provider "signalfx" {
-  auth_token              = var.access_token
-  api_url                 = var.api_url
+  auth_token = var.access_token
+  api_url    = var.api_url
 }
 
 provider "helm" {
@@ -17,118 +17,118 @@ provider "helm" {
 }
 
 module "dashboards" {
-  source                  = "./modules/dashboards"
-  count                   = var.dashboards_enabled ? 1 : 0
-  region                  = lookup(var.aws_region, var.region)
-  environment             = var.environment
-  det_prom_tags_id        = module.detectors.*.detector_promoting_tags_id
+  source           = "./modules/dashboards"
+  count            = var.dashboards_enabled ? 1 : 0
+  region           = lookup(var.aws_region, var.region)
+  environment      = var.environment
+  det_prom_tags_id = module.detectors.*.detector_promoting_tags_id
 }
 
 module "detectors" {
-  source                  = "./modules/detectors"
-  count                   = var.detectors_enabled ? 1 : 0
-  notification_email      = var.notification_email
-  soc_integration_id      = var.soc_integration_id
-  soc_routing_key         = var.soc_routing_key
-  region                  = lookup(var.aws_region, var.region)
-  environment             = var.environment
+  source             = "./modules/detectors"
+  count              = var.detectors_enabled ? 1 : 0
+  notification_email = var.notification_email
+  soc_integration_id = var.soc_integration_id
+  soc_routing_key    = var.soc_routing_key
+  region             = lookup(var.aws_region, var.region)
+  environment        = var.environment
 }
 
 module "vpc" {
-  source                  = "./modules/vpc"
-  vpc_name                = var.environment
-  vpc_cidr_block          = var.vpc_cidr_block
-  subnet_count            = var.subnet_count
-  region                  = lookup(var.aws_region, var.region)
-  environment             = var.environment
+  source         = "./modules/vpc"
+  vpc_name       = var.environment
+  vpc_cidr_block = var.vpc_cidr_block
+  subnet_count   = var.subnet_count
+  region         = lookup(var.aws_region, var.region)
+  environment    = var.environment
 }
 
 module "aws_ecs" {
-  source                  = "./modules/aws_ecs"
-  count                   = var.ecs_cluster_enabled ? 1 : 0
-  region                  = lookup(var.aws_region, var.region)
-  access_token            = var.access_token
-  realm                   = var.realm
-  environment             = var.environment
-  ecs_agent_url           = var.ecs_agent_url
-  ecs_app_port            = var.ecs_app_port
-  ecs_health_check_path   = var.ecs_health_check_path
-  ecs_app_image           = var.ecs_app_image
-  ecs_container_name      = var.ecs_container_name
-  ecs_fargate_cpu         = var.ecs_fargate_cpu
-  ecs_fargate_memory      = var.ecs_fargate_memory
-  ecs_app_count           = var.ecs_app_count
-  ecs_az_count            = var.ecs_az_count
+  source                = "./modules/aws_ecs"
+  count                 = var.ecs_cluster_enabled ? 1 : 0
+  region                = lookup(var.aws_region, var.region)
+  access_token          = var.access_token
+  realm                 = var.realm
+  environment           = var.environment
+  ecs_agent_url         = var.ecs_agent_url
+  ecs_app_port          = var.ecs_app_port
+  ecs_health_check_path = var.ecs_health_check_path
+  ecs_app_image         = var.ecs_app_image
+  ecs_container_name    = var.ecs_container_name
+  ecs_fargate_cpu       = var.ecs_fargate_cpu
+  ecs_fargate_memory    = var.ecs_fargate_memory
+  ecs_app_count         = var.ecs_app_count
+  ecs_az_count          = var.ecs_az_count
 }
 
 module "eks" {
-  source                  = "./modules/eks"
-  count                   = var.eks_cluster_enabled ? 1 : 0
-  region                  = lookup(var.aws_region, var.region)
-  environment             = var.environment
-  smart_agent_version     = var.smart_agent_version
-  access_token            = var.access_token
-  realm                   = var.realm
-  vpc_id                  = module.vpc.vpc_id
-  vpc_cidr_block          = var.vpc_cidr_block
-  public_subnet_ids       = module.vpc.public_subnet_ids
-  aws_access_key_id       = var.aws_access_key_id
-  aws_secret_access_key   = var.aws_secret_access_key
-  instance_type           = var.instance_type
-  ami                     = data.aws_ami.latest-ubuntu.id
-  key_name                = var.key_name
-  private_key_path        = var.private_key_path
-  eks_cluster_name        = join("-",[var.environment,"eks"])
+  source                = "./modules/eks"
+  count                 = var.eks_cluster_enabled ? 1 : 0
+  region                = lookup(var.aws_region, var.region)
+  environment           = var.environment
+  smart_agent_version   = var.smart_agent_version
+  access_token          = var.access_token
+  realm                 = var.realm
+  vpc_id                = module.vpc.vpc_id
+  vpc_cidr_block        = var.vpc_cidr_block
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  aws_access_key_id     = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
+  instance_type         = var.instance_type
+  ami                   = data.aws_ami.latest-ubuntu.id
+  key_name              = var.key_name
+  private_key_path      = var.private_key_path
+  eks_cluster_name      = join("-", [var.environment, "eks"])
 }
 
 module "eks_fargate" {
-  source                    = "./modules/eks_fargate"
-  count                     = var.eks_fargate_cluster_enabled ? 1 : 0
-  region                    = lookup(var.aws_region, var.region)
-  environment               = var.environment
-  smart_agent_version       = var.smart_agent_version
-  access_token              = var.access_token
-  realm                     = var.realm
-  eks_fargate_cluster_name  = join("-",[var.environment,"eks-fargate"])
+  source                   = "./modules/eks_fargate"
+  count                    = var.eks_fargate_cluster_enabled ? 1 : 0
+  region                   = lookup(var.aws_region, var.region)
+  environment              = var.environment
+  smart_agent_version      = var.smart_agent_version
+  access_token             = var.access_token
+  realm                    = var.realm
+  eks_fargate_cluster_name = join("-", [var.environment, "eks-fargate"])
 }
 
 module "phone_shop" {
-  source                  = "./modules/phone_shop"
-  count                   = var.phone_shop_enabled ? 1 : 0
-  region_wrapper_python   = lookup(var.region_wrapper_python, var.region)
-  region_wrapper_nodejs   = lookup(var.region_wrapper_nodejs, var.region)
-  access_token            = var.access_token
-  region                  = lookup(var.aws_region, var.region)
-  vpc_id                  = module.vpc.vpc_id
-  vpc_cidr_block          = var.vpc_cidr_block
-  environment             = var.environment
-  realm                   = var.realm
-  smart_agent_version     = var.smart_agent_version
-  instance_type           = var.instance_type
-  key_name                = var.key_name
-  private_key_path        = var.private_key_path
-  public_subnet_ids       = module.vpc.public_subnet_ids
-  ami                     = data.aws_ami.latest-ubuntu.id
+  source                = "./modules/phone_shop"
+  count                 = var.phone_shop_enabled ? 1 : 0
+  region_wrapper_python = lookup(var.region_wrapper_python, var.region)
+  region_wrapper_nodejs = lookup(var.region_wrapper_nodejs, var.region)
+  access_token          = var.access_token
+  region                = lookup(var.aws_region, var.region)
+  vpc_id                = module.vpc.vpc_id
+  vpc_cidr_block        = var.vpc_cidr_block
+  environment           = var.environment
+  realm                 = var.realm
+  smart_agent_version   = var.smart_agent_version
+  instance_type         = var.instance_type
+  key_name              = var.key_name
+  private_key_path      = var.private_key_path
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  ami                   = data.aws_ami.latest-ubuntu.id
 }
 
 module "lambda_sqs_dynamodb" {
-  source                  = "./modules/lambda_sqs_dynamodb"
-  count                   = var.lambda_sqs_dynamodb_enabled ? 1 : 0
-  region_wrapper_python   = lookup(var.region_wrapper_python, var.region)
-  access_token            = var.access_token
-  region                  = lookup(var.aws_region, var.region)
-  vpc_id                  = module.vpc.vpc_id
-  vpc_cidr_block          = var.vpc_cidr_block
-  environment             = var.environment
-  realm                   = var.realm
-  smart_agent_version     = var.smart_agent_version
-  aws_access_key_id       = var.aws_access_key_id
-  aws_secret_access_key   = var.aws_secret_access_key
-  key_name                = var.key_name
-  private_key_path        = var.private_key_path
-  instance_type           = var.instance_type
-  public_subnet_ids       = module.vpc.public_subnet_ids
-  ami                     = data.aws_ami.latest-ubuntu.id
+  source                = "./modules/lambda_sqs_dynamodb"
+  count                 = var.lambda_sqs_dynamodb_enabled ? 1 : 0
+  region_wrapper_python = lookup(var.region_wrapper_python, var.region)
+  access_token          = var.access_token
+  region                = lookup(var.aws_region, var.region)
+  vpc_id                = module.vpc.vpc_id
+  vpc_cidr_block        = var.vpc_cidr_block
+  environment           = var.environment
+  realm                 = var.realm
+  smart_agent_version   = var.smart_agent_version
+  aws_access_key_id     = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
+  key_name              = var.key_name
+  private_key_path      = var.private_key_path
+  instance_type         = var.instance_type
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  ami                   = data.aws_ami.latest-ubuntu.id
 }
 
 module "proxied_instances" {
@@ -151,6 +151,10 @@ module "proxied_instances" {
   proxied_windows_server_count     = var.proxied_windows_server_count
   proxied_windows_server_ids       = var.proxied_windows_server_ids
   windows_server_administrator_pwd = var.windows_server_administrator_pwd
+  windows_proxied_server_agent_url = var.windows_proxied_server_agent_url
+  windows_fluentd_url              = var.windows_fluentd_url
+  windows_tdagent_conf_url         = var.windows_tdagent_conf_url
+  windows_eventlog_conf_url        = var.windows_eventlog_conf_url
   windows_server_instance_type     = var.windows_server_instance_type
   windows_server_ami               = data.aws_ami.windows-server.id
   collector_version                = var.collector_version
@@ -206,34 +210,34 @@ module "instances" {
   splunk_ent_inst_type             = var.splunk_ent_inst_type
 }
 
- module "itsi_o11y_cp" {
-  source                                            = "./modules/itsi_o11y_cp"
-  count                                             = var.itsi_o11y_cp_enabled ? 1 : 0
-  access_token                                      = var.access_token
-  api_url                                           = var.api_url
-  realm                                             = var.realm
-  environment                                       = var.environment
-  region                                            = lookup(var.aws_region, var.region)
-  vpc_id                                            = module.vpc.vpc_id
-  vpc_cidr_block                                    = var.vpc_cidr_block
-  public_subnet_ids                                 = module.vpc.public_subnet_ids
-  key_name                                          = var.key_name
-  private_key_path                                  = var.private_key_path
-  instance_type                                     = var.instance_type
-  collector_instance_type                           = var.collector_instance_type
-  ami                                               = data.aws_ami.latest-ubuntu.id
-  splunk_itsi_count                                 = var.splunk_itsi_count
-  splunk_itsi_ids                                   = var.splunk_itsi_ids
-  splunk_itsi_inst_type                             = var.splunk_itsi_inst_type
-  splunk_itsi_version                               = var.splunk_itsi_version
-  splunk_itsi_filename                              = var.splunk_itsi_filename
-  splunk_itsi_files_local_path                      = var.splunk_itsi_files_local_path
-  splunk_itsi_license_filename                      = var.splunk_itsi_license_filename
-  splunk_app_for_content_packs_filename             = var.splunk_app_for_content_packs_filename
-  splunk_it_service_intelligence_filename           = var.splunk_it_service_intelligence_filename
-  splunk_synthetic_monitoring_add_on_filename       = var.splunk_synthetic_monitoring_add_on_filename
-  splunk_infrastructure_monitoring_add_on_filename  = var.splunk_infrastructure_monitoring_add_on_filename
-} 
+module "itsi_o11y_cp" {
+  source                                           = "./modules/itsi_o11y_cp"
+  count                                            = var.itsi_o11y_cp_enabled ? 1 : 0
+  access_token                                     = var.access_token
+  api_url                                          = var.api_url
+  realm                                            = var.realm
+  environment                                      = var.environment
+  region                                           = lookup(var.aws_region, var.region)
+  vpc_id                                           = module.vpc.vpc_id
+  vpc_cidr_block                                   = var.vpc_cidr_block
+  public_subnet_ids                                = module.vpc.public_subnet_ids
+  key_name                                         = var.key_name
+  private_key_path                                 = var.private_key_path
+  instance_type                                    = var.instance_type
+  collector_instance_type                          = var.collector_instance_type
+  ami                                              = data.aws_ami.latest-ubuntu.id
+  splunk_itsi_count                                = var.splunk_itsi_count
+  splunk_itsi_ids                                  = var.splunk_itsi_ids
+  splunk_itsi_inst_type                            = var.splunk_itsi_inst_type
+  splunk_itsi_version                              = var.splunk_itsi_version
+  splunk_itsi_filename                             = var.splunk_itsi_filename
+  splunk_itsi_files_local_path                     = var.splunk_itsi_files_local_path
+  splunk_itsi_license_filename                     = var.splunk_itsi_license_filename
+  splunk_app_for_content_packs_filename            = var.splunk_app_for_content_packs_filename
+  splunk_it_service_intelligence_filename          = var.splunk_it_service_intelligence_filename
+  splunk_synthetic_monitoring_add_on_filename      = var.splunk_synthetic_monitoring_add_on_filename
+  splunk_infrastructure_monitoring_add_on_filename = var.splunk_infrastructure_monitoring_add_on_filename
+}
 
 ### Instances Outputs ###
 output "OTEL_Gateway_Servers" {

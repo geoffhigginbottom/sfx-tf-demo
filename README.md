@@ -297,7 +297,7 @@ The following EC2 Instances can be deployed:
 - Apache
 - Splunk Enterprise
 
-Each Instance has Infrastructure Monitoring 'recievers' configured to match the services running on them.  The configuration for each monitor is deployed via its own specific agent_config.yaml file.
+Each Instance has Infrastructure Monitoring 'receivers' configured to match the services running on them.  The configuration for each monitor is deployed via its own specific agent_config.yaml file.
 
 ## Proxied Instances
 

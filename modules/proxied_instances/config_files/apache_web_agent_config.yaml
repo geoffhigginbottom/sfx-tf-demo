@@ -20,7 +20,7 @@ extensions:
     egress:
       endpoint: "${SPLUNK_API_URL}"
       # Use instead when sending to gateway
-      # endpoint: "${SPLUNK_GATEWAY_URL}"
+      #endpoint: "${SPLUNK_GATEWAY_URL}"
   smartagent:
     bundleDir: "${SPLUNK_BUNDLE_DIR}"
     collectd:
@@ -37,7 +37,7 @@ receivers:
   fluentforward:
     endpoint: 127.0.0.1:8006
   hostmetrics:
-    collection_interval: 1s
+    collection_interval: 10s
     scrapers:
       cpu:
       disk:
@@ -107,8 +107,10 @@ processors:
   memory_limiter:
     check_interval: 2s
     limit_mib: ${SPLUNK_MEMORY_LIMIT_MIB}
-  # detect if the collector is running on a cloud system
-  # important for creating unique cloud provider dimensions
+  
+  # Detect if the collector is running on a cloud system, which is important for creating unique cloud provider dimensions.
+  # Detector order is important: the `system` detector goes last so it can't preclude cloud detectors from setting host/os info.
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#ordering
   resourcedetection:
     detectors: [system, gce, ecs, ec2, azure]
     override: false
@@ -153,7 +155,8 @@ exporters:
     endpoint: http://${SPLUNK_GATEWAY_URL}:4318
   otlp:
     endpoint: "${SPLUNK_GATEWAY_URL}:4317"
-    insecure: true
+    tls:
+      insecure: true
   # Debug
   logging:
     loglevel: debug
@@ -170,25 +173,25 @@ service:
       #- resource/add_environment
       exporters: [sapm, signalfx]
       # Use instead when sending to gateway
-      # exporters: [otlphttp]
+      #exporters: [otlp, signalfx]
     metrics:
       receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/apache, smartagent/processes]
       processors: [memory_limiter, batch, resourcedetection]
       exporters: [signalfx]
       # Use instead when sending to gateway
-      # exporters: [otlphttp]
+      #exporters: [otlp]
     metrics/internal:
       receivers: [prometheus/internal]
       processors: [memory_limiter, batch, resourcedetection/internal]
       exporters: [signalfx]
       # Use instead when sending to gateway
-      # exporters: [otlphttp]
+      #exporters: [otlp]
     logs/signalfx:
       receivers: [signalfx]
       processors: [memory_limiter, batch]
       exporters: [signalfx]
       # Use instead when sending to gateway
-      # exporters: [otlphttp]
+      #exporters: [otlp]
     logs:
       receivers: [fluentforward, otlp]
       processors:
@@ -198,4 +201,4 @@ service:
       #- resource/add_environment
       exporters: [splunk_hec]
       # Use instead when sending to gateway
-      # exporters: [otlphttp]
+      #exporters: [otlp]

@@ -35,42 +35,50 @@ variable "windows_server_administrator_pwd" {
 
 ### SignalFX Variables ###
 variable "access_token" {
-  default = []
+  default = {}
 }
 variable "api_url" {
-  default = []
+  default = {}
 }
 variable "realm" {
-  default = []
+  default = {}
 }
 variable "collector_version" {
-  default = []
+  default = {}
 }
 variable "environment" {
-  default = []
+  default = {}
 }
-
 variable "proxied_apache_web_count" {
   default = {}
 }
 variable "proxied_apache_web_ids" {
   default = []
 }
-
 variable "proxied_windows_server_count" {
   default = {}
 }
 variable "proxied_windows_server_ids" {
   default = []
 }
-
+variable "windows_proxied_server_agent_url" {
+  default = {}
+}
+variable "windows_fluentd_url" {
+  default = {}
+}
+variable "windows_tdagent_conf_url" {
+  default = {}
+}
+variable "windows_eventlog_conf_url" {
+  default = {}
+}
 variable "proxy_server_count" {
   default = {}
 }
 variable "proxy_server_ids" {
   default = []
 }
-
 variable "branch" {
   default = []
 }
