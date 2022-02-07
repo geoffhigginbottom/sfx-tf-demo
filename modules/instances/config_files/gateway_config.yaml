@@ -18,6 +18,7 @@ extensions:
     size_mib: ${SPLUNK_BALLAST_SIZE_MIB}
 
 receivers:
+    # GH Added Logs and Host Metrics Receiver to enable collection from the Gateway itself
   fluentforward:
     endpoint: 127.0.0.1:8006
   hostmetrics:
@@ -67,8 +68,14 @@ receivers:
             action: drop
   sapm:
     endpoint: 0.0.0.0:7276
+    # Whether to preserve incoming access token and use instead of exporter token
+    # default = false
+    #access_token_passthrough: true
   signalfx:
     endpoint: 0.0.0.0:9943
+    # Whether to preserve incoming access token and use instead of exporter token
+    # default = false
+    #access_token_passthrough: true
   zipkin:
     endpoint: 0.0.0.0:9411
 
@@ -81,11 +88,6 @@ processors:
   memory_limiter:
     check_interval: 2s
     limit_mib: ${SPLUNK_MEMORY_LIMIT_MIB}
-  # detect if the collector is running on a cloud system
-  # important for creating unique cloud provider dimensions
-  resourcedetection:
-    detectors: [system, gce, ecs, ec2, azure]
-    override: false
 
   # Optional: The following processor can be used to add a default "deployment.environment" attribute to the traces
   # when it's not populated by instrumentation libraries.
@@ -116,15 +118,17 @@ exporters:
     #translation_rules: []
     #exclude_metrics: []
   # Debug
+  #logging:
+    #loglevel: debug
+  
+  # GH Added Logs and Host Metrics Receiver to enable collection from the Gateway itself
   # Logs
   splunk_hec:
     token: "${SPLUNK_HEC_TOKEN}"
     endpoint: "${SPLUNK_HEC_URL}"
     source: "otel"
     sourcetype: "otel"
-  logging:
-    loglevel: debug
-
+  
 service:
   extensions: [health_check, http_forwarder, zpages, memory_ballast]
   pipelines:
@@ -137,7 +141,7 @@ service:
       exporters: [sapm, signalfx]
     metrics:
       receivers: [otlp, hostmetrics, signalfx]
-      processors: [memory_limiter, batch, resourcedetection]
+      processors: [memory_limiter, batch]
       exporters: [signalfx]
     metrics/internal:
       receivers: [prometheus/internal]
