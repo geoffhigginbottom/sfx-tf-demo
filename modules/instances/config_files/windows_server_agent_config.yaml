@@ -93,7 +93,9 @@ receivers:
     endpoint: 0.0.0.0:9411
   smartagent/win_services:
     type: telegraf/win_services
+    intervalSeconds: 1
     serviceNames:
+      - fluentdwinsvc
       - Dnscache
       - Dhcp
       - LanmanServer
@@ -105,16 +107,48 @@ receivers:
       - RpcEptMapper
       - MSDTC
       - SamSs
+      - docker
+
   smartagent/procstat-docker:
     type: telegraf/procstat
+    intervalSeconds: 1
     exe: dockerd.exe
     pattern: docker
     WinService: docker
+
   smartagent/procstat-otel:
     type: telegraf/procstat
+    intervalSeconds: 1
     exe: otelcol.exe
     pattern: otel
     WinService: splunk-otel-collector
+
+  smartagent/telegraf/win_perf_counters:
+    type: telegraf/win_perf_counters
+    printValid: true
+    counterRefreshInterval: 10
+    objects:
+     - objectName: "Processor"
+       instances:
+        - "*"
+       counters:
+        - "% Idle Time"
+        - "% Interrupt Time"
+        - "% Privileged Time"
+        - "% User Time"
+        - "% Processor Time"
+       includeTotal: true
+       measurement: "win_cpu"
+
+     - objectName: "PhysicalDisk"
+       instances:
+        - "*"
+       counters:
+        - "% Disk Read Time"
+        - "% Disk Write Time"
+        - "% Idle Time"
+       includeTotal: false
+       measurement: "win_disk"
 
 processors:
   batch:
@@ -193,7 +227,7 @@ service:
       # Use instead when sending to gateway
       exporters: [otlphttp, signalfx]
     metrics:
-      receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/win_services, smartagent/procstat-docker]
+      receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/win_services, smartagent/procstat-docker, smartagent/procstat-otel, smartagent/telegraf/win_perf_counters]
       processors: [memory_limiter, batch, resourcedetection]
       #exporters: [signalfx]
       # Use instead when sending to gateway
