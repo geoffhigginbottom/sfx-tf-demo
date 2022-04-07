@@ -60,6 +60,10 @@ resource "aws_instance" "proxied_windows_server" {
     $WebClient.DownloadFile($source,$dest)
 
     Start-Service fluentdwinsvc
+
+    Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0
+    Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0
+
   </powershell>
   
   EOF

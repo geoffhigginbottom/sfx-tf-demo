@@ -86,8 +86,12 @@ receivers:
     listenAddress: 0.0.0.0:9080
   signalfx:
     endpoint: 0.0.0.0:9943
+    # Whether to preserve incoming access token and use instead of exporter token
+    # default = false
+    #access_token_passthrough: true
   zipkin:
     endpoint: 0.0.0.0:9411
+
   smartagent/sqlserver:
     type: telegraf/sqlserver
     host: localhost
@@ -95,8 +99,10 @@ receivers:
     userID: ${SPLUNK_SQL_USER}
     password: ${SPLUNK_SQL_USER_PWD}
     appName: signalfxagent
-  smartagent/processes:
+
+  smartagent/win_services:
     type: telegraf/win_services
+    intervalSeconds: 1
     serviceNames:
       - fluentdwinsvc
       - Dnscache
@@ -110,6 +116,40 @@ receivers:
       - RpcEptMapper
       - MSDTC
       - SamSs
+
+  smartagent/procstat-otel:
+    type: telegraf/procstat
+    intervalSeconds: 1
+    exe: otelcol.exe
+    pattern: otel
+    WinService: splunk-otel-collector
+
+  smartagent/telegraf/win_perf_counters:
+    type: telegraf/win_perf_counters
+    printValid: true
+    counterRefreshInterval: 10
+    objects:
+     - objectName: "Processor"
+       instances:
+        - "*"
+       counters:
+        - "% Idle Time"
+        - "% Interrupt Time"
+        - "% Privileged Time"
+        - "% User Time"
+        - "% Processor Time"
+       includeTotal: true
+       measurement: "win_cpu"
+
+     - objectName: "PhysicalDisk"
+       instances:
+        - "*"
+       counters:
+        - "% Disk Read Time"
+        - "% Disk Write Time"
+        - "% Idle Time"
+       includeTotal: false
+       measurement: "win_disk"
 
 processors:
   batch:
@@ -185,7 +225,7 @@ service:
       # Use instead when sending to gateway
       exporters: [otlphttp, signalfx]
     metrics:
-      receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/sqlserver, smartagent/processes]
+      receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/sqlserver, smartagent/win_services, smartagent/procstat-otel, smartagent/telegraf/win_perf_counters]
       processors: [memory_limiter, batch, resourcedetection]
       #exporters: [signalfx]
       # Use instead when sending to gateway
