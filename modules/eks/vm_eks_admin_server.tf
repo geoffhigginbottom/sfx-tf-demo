@@ -80,11 +80,12 @@ resource "aws_instance" "eks_admin_server" {
       "EKS_CLUSTER_NAME=${var.eks_cluster_name}",
       "helm repo add splunk-otel-collector-chart https://signalfx.github.io/splunk-otel-collector-chart",
       "helm repo update",
-      # "helm install --set provider='aws' --set distro='eks' --set splunkAccessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkRealm=$REALM --set otelCollector.enabled='false' --set logsEnabled='false' --generate-name splunk-otel-collector-chart/splunk-otel-collector",
       "helm install --set provider='aws' --set distro='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set otelCollector.enabled='false' --set splunkObservability.logsEnabled='true' --generate-name splunk-otel-collector-chart/splunk-otel-collector",
 
     ## Deploy Hot Rod
       "kubectl apply -f /home/ubuntu/deployment.yaml",
+      # "sudo chmod +x /home/ubuntu/deploy_hotrod.sh",
+      # "sudo chmod +x /home/ubuntu/delete_hotrod.sh",
       
     ## Write env vars to file (used for debugging)
       "echo $AWS_ACCESS_KEY_ID > /tmp/aws_access_key_id",
@@ -115,7 +116,6 @@ resource "aws_instance" "eks_admin_server" {
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)
-    # private_key = file("~/.ssh/id_rsa")
     agent = "true"
   }
 }
@@ -128,12 +128,36 @@ output "eks_admin_server_details" {
   )
 }
 
-# resource "null_resource" "kubectl_apply" {
+# resource "null_resource" "hotrod" {
 #   triggers = {
-#     k8s_yaml_contents = ${path.module}/config_files/deployment.yaml
+#     instance_ip_addr = aws_instance.eks_admin_server.public_ip,
+#     private_key_path = var.private_key_path
+#   }
+#   depends_on = [
+#     aws_eks_cluster.demo,
+#     aws_instance.eks_admin_server
+#   ]
+
+#   provisioner "remote-exec" {
+#     inline = [
+#       # "/home/ubuntu/deploy_hotrod.sh"
+#        "kubectl apply -f /home/ubuntu/deployment.yaml"
+#     ]
 #   }
 
-#   provisioner "local-exec" {
-#     command = "ssh ubuntu@self.public_ip kubectl apply -f /home/ubuntu/deployment.yaml"
+#   provisioner "remote-exec" {
+#     when = destroy
+#     inline = [
+#       # "/home/ubuntu/delete_hotrod.sh"
+#        "kubectl delete -f /home/ubuntu/deployment.yaml"
+#     ]
+#   }
+
+#   connection {
+#     host = self.triggers.instance_ip_addr
+#     type = "ssh"
+#     user = "ubuntu"
+#     private_key = file(self.triggers.private_key_path)
+#     agent = "true"
 #   }
 # }

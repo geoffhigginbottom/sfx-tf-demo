@@ -43,6 +43,14 @@ resource "aws_security_group" "instances_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ## Allow Trace data direct to Gateway Nodes
+  ingress {
+    from_port   = 9411
+    to_port     = 9411
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   ## Allow all egress traffic
   egress {
     from_port   = 0

@@ -14,5 +14,6 @@ resource "signalfx_detector" "active_host__detector" {
     notifications         = ["Email,${var.notification_email}", "VictorOps,${var.soc_integration_id},${var.soc_routing_key}"]
     parameterized_subject = "{{ruleSeverity}} Alert: {{{ruleName}}} ({{{detectorName}}})"
     parameterized_body    = var.message_body
+    disabled              = true
   }
 }

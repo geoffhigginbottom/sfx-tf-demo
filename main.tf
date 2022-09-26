@@ -177,6 +177,7 @@ module "instances" {
   key_name                         = var.key_name
   private_key_path                 = var.private_key_path
   instance_type                    = var.instance_type
+  mysql_instance_type              = var.mysql_instance_type
   gateway_instance_type            = var.gateway_instance_type
   ami                              = data.aws_ami.latest-ubuntu.id
   gateway_count                    = var.gateway_count

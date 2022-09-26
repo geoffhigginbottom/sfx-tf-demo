@@ -71,6 +71,9 @@ variable "instance_type" {
 variable "gateway_instance_type" {
   default = []
 }
+variable "mysql_instance_type" {
+  default = []
+}
 variable "ms_sql_instance_type" {
   default = []
 }

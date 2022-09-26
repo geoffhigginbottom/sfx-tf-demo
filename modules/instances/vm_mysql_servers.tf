@@ -1,7 +1,7 @@
 resource "aws_instance" "mysql" {
   count                     = var.mysql_count
   ami                       = var.ami
-  instance_type             = var.instance_type
+  instance_type             = var.mysql_instance_type
   subnet_id                 = element(var.public_subnet_ids, count.index)
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]

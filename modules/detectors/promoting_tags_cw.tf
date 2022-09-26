@@ -13,5 +13,6 @@ resource "signalfx_detector" "promote_tags_cw" {
     notifications         = ["Email,${var.notification_email}"]
     parameterized_subject = "{{ruleSeverity}} Alert: {{{ruleName}}} ({{{detectorName}}})"
     parameterized_body    = var.message_body_promote
+    disabled              = true
   }
 }
