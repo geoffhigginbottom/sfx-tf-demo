@@ -23,8 +23,13 @@ resource "aws_instance" "splunk_itsi" {
   }
 
   provisioner "file" {
+    source      = join("/",[var.splunk_itsi_files_local_path, var.splunk_itsi_filename])
+    destination = "/tmp/${var.splunk_itsi_filename}"
+  }
+
+  provisioner "file" {
     source      = join("/",[var.splunk_itsi_files_local_path, var.splunk_itsi_license_filename])
-    destination = "/tmp/${var.splunk_itsi_license_filename}}"
+    destination = "/tmp/${var.splunk_itsi_license_filename}"
   }
 
   provisioner "file" {
@@ -48,11 +53,6 @@ resource "aws_instance" "splunk_itsi" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/scripts/install_ITSI_Content_Pack.sh"
-    destination = "/tmp/install_ITSI_Content_Pack.sh"
-  }
-
-  provisioner "file" {
     source      = "${path.module}/config_files/inputs.conf"
     destination = "/tmp/inputs.conf"
   }
@@ -73,6 +73,10 @@ resource "aws_instance" "splunk_itsi" {
       "SPLUNK_ITSI_VERSION=${var.splunk_itsi_version}",
       "SPLUNK_ITSI_FILENAME=${var.splunk_itsi_filename}",
       "SPLUNK_ITSI_LICENSE_FILE=${var.splunk_itsi_license_filename}",
+      "SPLUNK_IT_SERVICE_INTELLIGENCE_FILENAME=${var.splunk_it_service_intelligence_filename}",
+      "SPLUNK_INFRASTRUCTURE_MONITORING_ADD_ON_FILENAME=${var.splunk_infrastructure_monitoring_add_on_filename}",
+      "SPLUNK_SYNTHETICS_ADD_ON_FILENAME=${var.splunk_synthetic_monitoring_add_on_filename}",
+      "SPLUNK_APP_FOR_CONTENT_PACKS_FILENAME=${var.splunk_app_for_content_packs_filename}",
 
     ## Write env vars to file (used for debugging)
       "echo $SPLUNK_ITSI_PASSWORD > /tmp/splunk_itsi_password",
@@ -80,9 +84,41 @@ resource "aws_instance" "splunk_itsi" {
       "echo $SPLUNK_ITSI_FILENAME > /tmp/splunk_itsi_filename",
       "echo $SPLUNK_ITSI_LICENSE_FILE > /tmp/splunk_itsi_license_file",
 
-    ## Install Splunk + ITSI + O11y Content Pack
-      "sudo chmod +x /tmp/install_ITSI_Content_Pack.sh",
-      "sudo /tmp/install_ITSI_Content_Pack.sh $SPLUNK_ITSI_PASSWORD $SPLUNK_ITSI_VERSION $SPLUNK_ITSI_FILENAME $SPLUNK_ITSI_LICENSE_FILE",
+    ## Install Splunk Enterprise
+      "sudo dpkg -i /tmp/$SPLUNK_ITSI_FILENAME",
+      "sudo /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd $SPLUNK_ITSI_PASSWORD",
+      "sudo /opt/splunk/bin/splunk enable boot-start",
+
+    ## install ITSI NFR license
+      "sudo mkdir /opt/splunk/etc/licenses/enterprise",
+      "sudo cp /tmp/${var.splunk_itsi_license_filename} /opt/splunk/etc/licenses/enterprise/${var.splunk_itsi_license_filename}.lic",
+      "sudo /opt/splunk/bin/splunk restart",
+    
+    ## install java
+      "sudo apt install -y default-jre",
+      "JAVA_HOME=$(realpath /usr/bin/java)",
+
+    ## stop splunk
+      "sudo /opt/splunk/bin/splunk stop",
+
+    ## install apps
+      "sudo tar -xvf /tmp/$SPLUNK_IT_SERVICE_INTELLIGENCE_FILENAME -C /opt/splunk/etc/apps",
+      "sudo tar -xvf /tmp/$SPLUNK_INFRASTRUCTURE_MONITORING_ADD_ON_FILENAME -C /opt/splunk/etc/apps",
+      "sudo tar -xvf /tmp/$SPLUNK_SYNTHETICS_ADD_ON_FILENAME -C /opt/splunk/etc/apps",
+      "sudo tar -xvf /tmp/SPLUNK_APP_FOR_CONTENT_PACKS_FILENAME -C /opt/splunk/etc/apps",
+
+    ## ensure rights are given for the content pack
+      "sudo chown splunk:splunk -R /opt/splunk/etc/apps",
+
+    # ensure inputs.conf reflects in the UI
+      "sudo chmod 755 -R /opt/splunk/etc/apps/itsi/local",
+
+    # Add Modular Input
+      "sudo cp /opt/splunk/etc/apps/itsi/local/inputs.conf /opt/splunk/etc/apps/itsi/local/inputs.bak",
+      "sudo cat /tmp/inputs.conf >> /opt/splunk/etc/apps/itsi/local/inputs.conf",
+
+    # start splunk
+      "sudo /opt/splunk/bin/splunk start"
     ]
   }
 
