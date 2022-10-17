@@ -105,20 +105,23 @@ resource "aws_instance" "splunk_itsi" {
       "sudo tar -xvf /tmp/$SPLUNK_IT_SERVICE_INTELLIGENCE_FILENAME -C /opt/splunk/etc/apps",
       "sudo tar -xvf /tmp/$SPLUNK_INFRASTRUCTURE_MONITORING_ADD_ON_FILENAME -C /opt/splunk/etc/apps",
       "sudo tar -xvf /tmp/$SPLUNK_SYNTHETICS_ADD_ON_FILENAME -C /opt/splunk/etc/apps",
-      "sudo tar -xvf /tmp/SPLUNK_APP_FOR_CONTENT_PACKS_FILENAME -C /opt/splunk/etc/apps",
+      "sudo tar -xvf /tmp/$SPLUNK_APP_FOR_CONTENT_PACKS_FILENAME -C /opt/splunk/etc/apps",
+
+    ## start splunk
+      "sudo /opt/splunk/bin/splunk start",
+
+    ## ensure inputs.conf reflects in the UI
+      "sudo chmod 755 -R /opt/splunk/etc/apps/itsi/local",
+
+    ## Add Modular Input
+      "sudo cp /opt/splunk/etc/apps/itsi/local/inputs.conf /opt/splunk/etc/apps/itsi/local/inputs.bak",
+      "sudo cat /tmp/inputs.conf >> /opt/splunk/etc/apps/itsi/local/inputs.conf",
 
     ## ensure rights are given for the content pack
       "sudo chown splunk:splunk -R /opt/splunk/etc/apps",
 
-    # ensure inputs.conf reflects in the UI
-      "sudo chmod 755 -R /opt/splunk/etc/apps/itsi/local",
-
-    # Add Modular Input
-      "sudo cp /opt/splunk/etc/apps/itsi/local/inputs.conf /opt/splunk/etc/apps/itsi/local/inputs.bak",
-      "sudo cat /tmp/inputs.conf >> /opt/splunk/etc/apps/itsi/local/inputs.conf",
-
-    # start splunk
-      "sudo /opt/splunk/bin/splunk start"
+    ## restart splunk
+      "sudo /opt/splunk/bin/splunk restart"
     ]
   }
 
