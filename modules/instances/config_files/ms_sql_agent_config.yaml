@@ -84,6 +84,8 @@ receivers:
   smartagent/signalfx-forwarder:
     type: signalfx-forwarder
     listenAddress: 0.0.0.0:9080
+  smartagent/processlist:
+    type: processlist
   signalfx:
     endpoint: 0.0.0.0:9943
     # Whether to preserve incoming access token and use instead of exporter token
@@ -160,15 +162,14 @@ processors:
   memory_limiter:
     check_interval: 2s
     limit_mib: ${SPLUNK_MEMORY_LIMIT_MIB}
-  # detect if the collector is running on a cloud system
-  # important for creating unique cloud provider dimensions
-  resourcedetection:
-    detectors: [system, gce, ecs, ec2, azure]
-    override: false
 
-  # Same as above but overrides resource attributes set by receivers
-  resourcedetection/internal:
-    detectors: [system, gce, ecs, ec2, azure]
+  # Detect if the collector is running on a cloud system, which is important for creating unique cloud provider dimensions.
+  # Detector order is important: the `system` detector goes last so it can't preclude cloud detectors from setting host/os info.
+  # Resource detection processor is configured to override all host and cloud attributes because instrumentation
+  # libraries can send wrong values from container environments.
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#ordering
+  resourcedetection:
+    detectors: [gce, ecs, ec2, azure, system]
     override: true
 
   # Optional: The following processor can be used to add a default "deployment.environment" attribute to the logs and 
@@ -206,7 +207,8 @@ exporters:
     endpoint: http://${SPLUNK_GATEWAY_URL}:4318
   otlp:
     endpoint: "${SPLUNK_GATEWAY_URL}:4317"
-    insecure: true
+    tls:
+      insecure: true
   # Debug
   logging:
     loglevel: debug
@@ -232,16 +234,14 @@ service:
       exporters: [otlphttp]
     metrics/internal:
       receivers: [prometheus/internal]
-      processors: [memory_limiter, batch, resourcedetection/internal]
-      #exporters: [signalfx]
-      # Use instead when sending to gateway
-      exporters: [otlphttp]
+      processors: [memory_limiter, batch, resourcedetection]
+      # When sending to gateway, at least one metrics pipeline needs
+      # to use signalfx exporter so host metadata gets emitted
+      exporters: [signalfx]
     logs/signalfx:
-      receivers: [signalfx]
-      processors: [memory_limiter, batch]
-      #exporters: [signalfx]
-      # Use instead when sending to gateway
-      exporters: [otlphttp]
+      receivers: [signalfx, smartagent/processlist]
+      processors: [memory_limiter, batch, resourcedetection]
+      exporters: [signalfx]
     logs:
       receivers: [fluentforward, otlp]
       processors:
