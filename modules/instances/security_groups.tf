@@ -74,4 +74,20 @@ resource "aws_security_group" "splunk_ent_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  ingress {
+    from_port   = 8089
+    to_port     = 8089
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+    ingress {
+    from_port   = 9997
+    to_port     = 9997
+    protocol    = "tcp"
+    security_groups = [
+      aws_security_group.instances_sg.id
+    ]
+  }
 }

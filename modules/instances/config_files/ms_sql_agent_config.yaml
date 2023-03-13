@@ -36,6 +36,7 @@ extensions:
 receivers:
   fluentforward:
     endpoint: 127.0.0.1:8006
+  
   hostmetrics:
     collection_interval: 1s
     scrapers:
@@ -52,6 +53,7 @@ receivers:
       processes:
       # System processes metrics, disabled by default
       # process:
+  
   jaeger:
     protocols:
       grpc:
@@ -62,12 +64,14 @@ receivers:
         endpoint: 0.0.0.0:6831
       thrift_http:
         endpoint: 0.0.0.0:14268
+  
   otlp:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  
   # This section is used to collect the OpenTelemetry Collector metrics
   # Even if just a Splunk APM customer, these metrics are included
   prometheus/internal:
@@ -100,14 +104,13 @@ receivers:
     port: 1433
     userID: ${SPLUNK_SQL_USER}
     password: ${SPLUNK_SQL_USER_PWD}
-    appName: signalfxagent
+    appName: sqlserver
 
   smartagent/win_services:
     type: telegraf/win_services
     intervalSeconds: 1
     serviceNames:
       - fluentdwinsvc
-      - Dnscache
       - Dhcp
       - LanmanServer
       - LanmanWorkstation
@@ -118,6 +121,8 @@ receivers:
       - RpcEptMapper
       - MSDTC
       - SamSs
+      - MSSQLSERVER
+      - SQLSERVERAGENT
 
   smartagent/procstat-otel:
     type: telegraf/procstat
@@ -125,6 +130,13 @@ receivers:
     exe: otelcol.exe
     pattern: otel
     WinService: splunk-otel-collector
+
+  smartagent/procstat-mssqlserver:
+    type: telegraf/procstat
+    intervalSeconds: 1
+    exe: sqlservr.exe
+    pattern: MSSQLSERVER
+    WinService: MSSQLSERVER
 
   smartagent/telegraf/win_perf_counters:
     type: telegraf/win_perf_counters
@@ -152,6 +164,23 @@ receivers:
         - "% Idle Time"
        includeTotal: false
        measurement: "win_disk"
+
+  windowsperfcounters/memory:
+    metrics:
+      bytes.committed:
+        description: the number of bytes committed to memory
+        unit: By
+        gauge:
+    collection_interval: 30s
+    perfcounters:
+      - object: Memory
+        counters:
+          - name: Committed Bytes
+            metric: bytes.committed
+
+  smartagent/ntp:
+    type: ntp
+    host: pool.ntp.org
 
 processors:
   batch:
@@ -227,7 +256,7 @@ service:
       # Use instead when sending to gateway
       exporters: [otlphttp, signalfx]
     metrics:
-      receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/sqlserver, smartagent/win_services, smartagent/procstat-otel, smartagent/telegraf/win_perf_counters]
+      receivers: [hostmetrics, otlp, signalfx, smartagent/signalfx-forwarder, smartagent/sqlserver, smartagent/win_services, smartagent/procstat-otel, smartagent/telegraf/win_perf_counters, windowsperfcounters/memory]
       processors: [memory_limiter, batch, resourcedetection]
       #exporters: [signalfx]
       # Use instead when sending to gateway

@@ -105,3 +105,11 @@ output "splunk_ent_urls" {
 output "splunk_password" {
   value = random_string.splunk_password.result
 }
+
+output "splunk_enterprise_private_ip" {
+    value =  formatlist(
+    "%s, %s",
+    aws_instance.splunk_ent.*.tags.Name,
+    aws_instance.splunk_ent.*.private_ip,
+  )
+}

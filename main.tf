@@ -209,6 +209,8 @@ module "instances" {
   splunk_ent_version               = var.splunk_ent_version
   splunk_ent_filename              = var.splunk_ent_filename
   splunk_ent_inst_type             = var.splunk_ent_inst_type
+  universalforwarder_filename      = var.universalforwarder_filename
+  universalforwarder_url           = var.universalforwarder_url
 }
 
 module "itsi_o11y_cp" {
@@ -294,6 +296,10 @@ output "Splunk_Enterprise_Server" {
 }
 output "splunk_password" {
   value = var.instances_enabled ? module.instances.*.splunk_password : null
+  # sensitive = true
+}
+output "splunk_enterprise_private_ip" {
+  value = var.instances_enabled ? module.instances.*.splunk_enterprise_private_ip : null
   # sensitive = true
 }
 output "splunk_url" {

@@ -402,6 +402,12 @@ variable "splunk_ent_version" {
 variable "splunk_ent_inst_type" {
   default = {}
 }
+variable "universalforwarder_filename" {
+  default = {}
+}
+variable "universalforwarder_url" {
+  default = {}
+}
 
 ### Splunk ITSI Variables ###
 variable "splunk_itsi_filename" {

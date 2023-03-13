@@ -145,3 +145,9 @@ variable "splunk_ent_filename" {
 variable "splunk_ent_inst_type" {
   default = {}
 }
+variable "universalforwarder_filename" {
+  default = {}
+}
+variable "universalforwarder_url" {
+  default = {}
+}

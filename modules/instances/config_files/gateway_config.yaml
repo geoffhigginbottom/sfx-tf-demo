@@ -91,20 +91,8 @@ processors:
     check_interval: 2s
     limit_mib: ${SPLUNK_MEMORY_LIMIT_MIB}
 
-  # Detect if the collector is running on a cloud system, which is important for creating unique cloud provider dimensions.
-  # Detector order is important: the `system` detector goes last so it can't preclude cloud detectors from setting host/os info.
-  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#ordering
-  resourcedetection:
-    detectors: [gce, ecs, ec2, azure, system]
-    override: false
-
-  # Same as above but overrides resource attributes set by receivers
-  resourcedetection/internal:
-    detectors: [gce, ecs, ec2, azure, system]
-    override: true
-
-  # Optional: The following processor can be used to add a default "deployment.environment" attribute to the logs and 
-  # traces when it's not populated by instrumentation libraries.
+  # Optional: The following processor can be used to add a default "deployment.environment" attribute to the traces
+  # when it's not populated by instrumentation libraries.
   # If enabled, make sure to enable this processor in the pipeline below.
   #resource/add_environment:
     #attributes:
@@ -112,19 +100,34 @@ processors:
         #value: staging/production/...
         #key: deployment.environment
 
+  # Detect if the collector is running on a cloud system. Overrides resource attributes set by receivers.
+  # Detector order is important: the `system` detector goes last so it can't preclude cloud detectors from setting host/os info.
+  # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor#ordering
+  resourcedetection/internal:
+    detectors: [gcp, ecs, ec2, azure, system]
+    override: true
+
 exporters:
   # Traces
   sapm:
     access_token: "${SPLUNK_ACCESS_TOKEN}"
     endpoint: "https://ingest.${SPLUNK_REALM}.signalfx.com/v2/trace"
+    sending_queue:
+      num_consumers: 32
   # Metrics + Events
   signalfx:
     access_token: "${SPLUNK_ACCESS_TOKEN}"
     realm: "${SPLUNK_REALM}"
+    sending_queue:
+      num_consumers: 32
     ## Uncomment below if your agents are sending via signalfx exporter
     ## to avoid double translations and exclusions.
     #translation_rules: []
     #exclude_metrics: []
+  signalfx/internal:
+    access_token: "${SPLUNK_ACCESS_TOKEN}"
+    realm: "${SPLUNK_REALM}"
+    sync_host_metadata: true
   # Debug
   #logging:
     #loglevel: debug
@@ -142,25 +145,20 @@ service:
   pipelines:
     traces:
       receivers: [jaeger, otlp, sapm, zipkin]
-      processors:
+      processors: 
       - memory_limiter
       - batch
-      - resourcedetection
       #- resource/add_environment
-      exporters: [sapm, signalfx]
+      exporters: [sapm]
     metrics:
-      receivers: [otlp, hostmetrics, signalfx]
-      processors: [memory_limiter, batch, resourcedetection]
+      receivers: [otlp, signalfx]
+      processors: [memory_limiter, batch]
       exporters: [signalfx]
     metrics/internal:
-      receivers: [prometheus/internal]
+      receivers: [hostmetrics, prometheus/internal]
       processors: [memory_limiter, batch, resourcedetection/internal]
-      exporters: [signalfx]
+      exporters: [signalfx/internal]
     logs:
-      receivers: [otlp, signalfx]
-      processors: [memory_limiter, batch, resourcedetection]
-      exporters: [splunk_hec]
-    logs/signalfx:
-      receivers: [signalfx, smartagent/processlist]
-      processors: [memory_limiter, batch, resourcedetection]
+      receivers: [otlp, signalfx, smartagent/processlist]
+      processors: [memory_limiter, batch, resourcedetection/internal]
       exporters: [signalfx]
