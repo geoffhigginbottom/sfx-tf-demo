@@ -7,7 +7,7 @@ resource "aws_instance" "gateway" {
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.gateway_ids, count.index)]))
+    Name = lower(join("-",[var.environment,element(var.gateway_ids, count.index)]))
     role = "collector"
   }
 

@@ -19,7 +19,7 @@ resource "aws_instance" "splunk_itsi" {
   ]
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.splunk_itsi_ids, count.index)]))
+    Name = lower(join("-",[var.environment,element(var.splunk_itsi_ids, count.index)]))
   }
 
   provisioner "file" {

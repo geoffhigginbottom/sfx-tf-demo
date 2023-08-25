@@ -45,7 +45,7 @@ resource "aws_instance" "ms_sql" {
   EOF
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.ms_sql_ids, count.index)]))
+    Name = lower(join("-",[var.environment,element(var.ms_sql_ids, count.index)]))
   }
 }
 

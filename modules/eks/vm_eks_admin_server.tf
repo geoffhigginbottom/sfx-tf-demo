@@ -8,7 +8,7 @@ resource "aws_instance" "eks_admin_server" {
   ]
  
   tags = {
-    Name = "${var.environment}_eks_admin"
+    Name = "${var.environment}_eks_admin_server"
   }
 
   provisioner "file" {
@@ -26,10 +26,10 @@ resource "aws_instance" "eks_admin_server" {
     destination = "/tmp/install_eks_tools.sh"
   }
 
-  provisioner "file" {
-    source      = "${path.module}/config_files/deployment.yaml"
-    destination = "/home/ubuntu/deployment.yaml"
-  }
+  # provisioner "file" {
+  #   source      = "${path.module}/config_files/deployment.yaml"
+  #   destination = "/home/ubuntu/deployment.yaml"
+  # }
 
   depends_on = [aws_eks_cluster.demo]
 
@@ -64,7 +64,7 @@ resource "aws_instance" "eks_admin_server" {
       "/tmp/install_eks_tools.sh",
       "ENVIRONMENT=${var.environment}",
       "sudo chmod +x /tmp/generate_values.sh",
-      "/tmp/generate_values.sh $ENVIRONMENT",
+      # "/tmp/generate_values.sh $ENVIRONMENT", #is this still needed as hotrod has been removed
 
     ## Setup eksutils
       "AWS_DEFAULT_REGION=${var.region}",
@@ -74,19 +74,28 @@ resource "aws_instance" "eks_admin_server" {
       "eksctl get clusters",
       "aws eks update-kubeconfig --name $EKS_CLUSTER_NAME",
 
-    ## Install K8S Integration using OTEL
-      "TOKEN=${var.access_token}",
-      "REALM=${var.realm}",
-      "EKS_CLUSTER_NAME=${var.eks_cluster_name}",
-      "helm repo add splunk-otel-collector-chart https://signalfx.github.io/splunk-otel-collector-chart",
-      "helm repo update",
-      "helm install --set provider='aws' --set distro='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set otelCollector.enabled='false' --set splunkObservability.logsEnabled='true' --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+    # ## Install K8S Integration using OTEL
+    #   "TOKEN=${var.access_token}",
+    #   "REALM=${var.realm}",
+    #   "EKS_CLUSTER_NAME=${var.eks_cluster_name}",
+    #   "helm repo add splunk-otel-collector-chart https://signalfx.github.io/splunk-otel-collector-chart",
+    #   "helm repo update",
+    #   "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set gateway.enabled='false' --set splunkObservability.profilingEnabled='true' --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+    #   # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set gateway.enabled='false' --set splunkObservability.profilingEnabled='true' --set splunkPlatform.endpoint=$protocol://$ipaddress:8088/services/collector --set splunkPlatform.token=$hec_token --set splunkPlatform.index=k8s-logs, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+    #   # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=dAb_HPT5SSP243Af4lYikg --set clusterName=tfdemo_eks_cluster --set splunkObservability.realm=eu0 --set gateway.enabled='false' --set splunkObservability.profilingEnabled='false' --set splunkPlatform.endpoint=https://http-inputs-scv-shw-0b83708c1db0ac.stg.splunkcloud.com/services/collector/raw --set splunkPlatform.token=06686ce3-5794-4683-a69d-b005c16a948a --set splunkPlatform.index=geoff_test_2, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+    #   # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=dAb_HPT5SSP243Af4lYikg --set clusterName=tfdemo_eks_cluster --set splunkObservability.realm=eu0 --set gateway.enabled='false' --set splunkObservability.profilingEnabled='false' --set splunkPlatform.endpoint=http://eip1.geoffh.co.uk:8088 --set splunkPlatform.token=e93d2724-43eb-4e4d-ad23-40474059c1f5 --set splunkPlatform.index=k8s-logs, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+      
 
     ## Deploy Hot Rod
-      "kubectl apply -f /home/ubuntu/deployment.yaml",
+      # "kubectl apply -f /home/ubuntu/deployment.yaml",
       # "sudo chmod +x /home/ubuntu/deploy_hotrod.sh",
       # "sudo chmod +x /home/ubuntu/delete_hotrod.sh",
       
+    ## Deploy Astro Shop
+      "git clone https://github.com/splunk/observability-workshop",
+      "helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts",
+      "helm install astro-shop-demo open-telemetry/opentelemetry-demo --values ~/observability-workshop/workshop/oteldemo/otel-demo.yaml",
+
     ## Write env vars to file (used for debugging)
       "echo $AWS_ACCESS_KEY_ID > /tmp/aws_access_key_id",
       "echo $AWS_SECRET_ACCESS_KEY > /tmp/aws_secret_access_key",
@@ -107,7 +116,7 @@ resource "aws_instance" "eks_admin_server" {
   #   when = destroy
   #   on_failure = continue
   #   inline = [
-  #     "kubectl delete -f /home/ubuntu/deployment.yaml"
+  #     "sudo helm delete"
   #   ]
   # }
 
@@ -128,36 +137,46 @@ output "eks_admin_server_details" {
   )
 }
 
-# resource "null_resource" "hotrod" {
+# ## Deploy the Astro Shop 
+# # Usees the Null Resource as it needs to be deleted during destroy phase as the VPC 
+# # will not delete if the Load Balancer created by the deploment is still present.
+# # Triggers are used because "Destroy-time provisioners and their connection configurations may 
+# # only reference attributes of the related resource, via 'self', 'count.index', or 'each.key'"
+
+# resource "null_resource" "astroshop" {
+#   count      = 1
+  
 #   triggers = {
 #     instance_ip_addr = aws_instance.eks_admin_server.public_ip,
 #     private_key_path = var.private_key_path
 #   }
+
 #   depends_on = [
 #     aws_eks_cluster.demo,
 #     aws_instance.eks_admin_server
 #   ]
 
+#   connection {
+#     type = "ssh"
+#     user = "ubuntu"
+#     # private_key = file(var.private_key_path)
+#     private_key = file(self.triggers.private_key_path)
+#     # host = aws_instance.eks_admin_server.public_ip
+#     host = self.triggers.instance_ip_addr
+#   }
+
 #   provisioner "remote-exec" {
 #     inline = [
-#       # "/home/ubuntu/deploy_hotrod.sh"
-#        "kubectl apply -f /home/ubuntu/deployment.yaml"
+#       "git clone https://github.com/splunk/observability-workshop",
+#       "helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts",
+#       "helm install astro-shop-demo open-telemetry/opentelemetry-demo --values ~/observability-workshop/workshop/oteldemo/otel-demo.yaml",
 #     ]
 #   }
 
 #   provisioner "remote-exec" {
 #     when = destroy
 #     inline = [
-#       # "/home/ubuntu/delete_hotrod.sh"
-#        "kubectl delete -f /home/ubuntu/deployment.yaml"
+#       "helm delete my-otel-demo"
 #     ]
-#   }
-
-#   connection {
-#     host = self.triggers.instance_ip_addr
-#     type = "ssh"
-#     user = "ubuntu"
-#     private_key = file(self.triggers.private_key_path)
-#     agent = "true"
 #   }
 # }

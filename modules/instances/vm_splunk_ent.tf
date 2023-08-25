@@ -4,6 +4,12 @@ resource "random_string" "splunk_password" {
   # override_special = "@£$"
 }
 
+resource "random_string" "lo_connect_password" {
+  length           = 12
+  special          = false
+  # override_special = "@£$"
+}
+
 resource "aws_instance" "splunk_ent" {
   count                     = var.splunk_ent_count
   ami                       = var.ami
@@ -20,12 +26,17 @@ resource "aws_instance" "splunk_ent" {
   ]
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.splunk_ent_ids, count.index)]))
+    Name = lower(join("-",[var.environment,element(var.splunk_ent_ids, count.index)]))
   }
 
   provisioner "file" {
-    source      = "${path.module}/scripts/install_splunk.sh"
-    destination = "/tmp/install_splunk.sh"
+    source      = "${path.module}/scripts/install_splunk_enterprise.sh"
+    destination = "/tmp/install_splunk_enterprise.sh"
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/scripts/certs.sh"
+    destination = "/tmp/certs.sh"
   }
 
     provisioner "file" {
@@ -36,6 +47,12 @@ resource "aws_instance" "splunk_ent" {
   provisioner "file" {
     source      = "${path.module}/scripts/update_splunk_otel_collector.sh"
     destination = "/tmp/update_splunk_otel_collector.sh"
+  }
+
+
+  provisioner "file" {
+    source      = join("/",[var.splunk_enterprise_files_local_path, var.splunk_enterprise_license_filename])
+    destination = "/tmp/${var.splunk_enterprise_license_filename}"
   }
 
   provisioner "remote-exec" {
@@ -52,18 +69,34 @@ resource "aws_instance" "splunk_ent" {
       
     ## Create Splunk Ent Vars
       "SPLUNK_PASSWORD=${random_string.splunk_password.result}",
+      # "SPLUNK_PASSWORD=${var.splunk_password}",
+      "LO_CONNECT_PASSWORD=${random_string.lo_connect_password.result}",
       "SPLUNK_ENT_VERSION=${var.splunk_ent_version}",
       "SPLUNK_FILENAME=${var.splunk_ent_filename}",
+      "SPLUNK_ENTERPRISE_LICENSE_FILE=${var.splunk_enterprise_license_filename}",
 
     ## Write env vars to file (used for debugging)
       "echo $SPLUNK_PASSWORD > /tmp/splunk_password",
+      "echo $LO_CONNECT_PASSWORD > /tmp/lo_connect_password",
       "echo $SPLUNK_ENT_VERSION > /tmp/splunk_ent_version",
       "echo $SPLUNK_FILENAME > /tmp/splunk_filename",
+      "echo $SPLUNK_ENTERPRISE_LICENSE_FILE > /tmp/splunk_enterprise_license_filename",
       "echo $LBURL > /tmp/lburl",
 
     ## Install Splunk
-      "sudo chmod +x /tmp/install_splunk.sh",
-      "sudo /tmp/install_splunk.sh $SPLUNK_PASSWORD $SPLUNK_ENT_VERSION $SPLUNK_FILENAME",
+      "sudo chmod +x /tmp/install_splunk_enterprise.sh",
+      "sudo /tmp/install_splunk_enterprise.sh $SPLUNK_PASSWORD $SPLUNK_ENT_VERSION $SPLUNK_FILENAME $LO_CONNECT_PASSWORD",
+
+    ## install NFR license
+      "sudo mkdir /opt/splunk/etc/licenses/enterprise",
+      "sudo cp /tmp/${var.splunk_enterprise_license_filename} /opt/splunk/etc/licenses/enterprise/${var.splunk_enterprise_license_filename}.lic",
+      "sudo /opt/splunk/bin/splunk restart",
+
+    ## Create Certs
+      "sudo chmod +x /tmp/certs.sh",
+      "sudo /tmp/certs.sh",
+      "sudo cp /opt/splunk/etc/auth/sloccerts/mySplunkWebCert.pem /tmp/mySplunkWebCert.pem",
+      "sudo chown ubuntu:ubuntu /tmp/mySplunkWebCert.pem",
 
     ## Install Otel Agent
       "sudo curl -sSL https://dl.signalfx.com/splunk-otel-collector.sh > /tmp/splunk-otel-collector.sh",
@@ -85,6 +118,95 @@ resource "aws_instance" "splunk_ent" {
   }
 }
 
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.splunk_ent[0].id
+  public_ip = "13.36.136.240"
+}
+
+# resource "splunk_indexes" "otel_k8s" {
+#   name                   = "otel-k8s"
+#   max_total_data_size_mb = 100000
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "splunk_indexes" "otel" {
+#   name                   = "otel"
+#   max_total_data_size_mb = 100000
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "splunk_global_http_event_collector" "http" {
+#   disabled   = false
+#   enable_ssl = false
+#   port       = 8088
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "splunk_inputs_http_event_collector" "otel_k8s" {
+#   name       = "otel-k8s"
+#   index      = "otel-k8s"
+#   indexes    = ["otel-k8s"]
+#   disabled   = false
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "splunk_inputs_http_event_collector" "otel" {
+#   name       = "otel"
+#   index      = "otel"
+#   indexes    = ["otel"]
+#   disabled   = false
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "splunk_authorization_roles" "lo_connect_role" {
+#   name           = "lo-connect-role"
+#   imported_roles = ["user"]
+#   capabilities   = ["edit_tokens_own"]
+#   search_indexes_allowed = ["*"]
+#   search_indexes_default = ["main"]
+#   search_time_win = "2592000"
+#   search_jobs_quota = "12"
+#   realtime_search_jobs_quota = "0"
+#   cumulative_search_jobs_quota = "12"
+#   cumulative_realtime_search_jobs_quota = "0"
+#   search_disk_quota = "100"
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "splunk_authentication_users" "lo_connect_user" {
+#   name              = "lo-connect"
+#   password          = random_string.lo_connect_password.result
+#   force_change_pass = false
+#   roles             = ["lo-connect-role"]
+#   depends_on = [ splunk_authorization_roles.lo_connect_role ]
+# }
+
+# resource "null_resource" "get_cert" {
+#   provisioner "local-exec" {
+#     # command = "scp ubuntu@${splunk_enterprise_private_ip}:/tmp/mySplunkWebCert.pem ~/mySplunkWebCert.pem"
+#     command = "scp ubuntu@13.36.136.240:/tmp/mySplunkWebCert.pem ~/mySplunkWebCert.pem"
+#   }
+#   provisioner "local-exec" {
+#     when    = destroy
+#     command = "~/mySplunkWebCert.pem"
+#   }
+#   depends_on = [ aws_instance.splunk_ent ]
+# }
+
+# resource "null_resource" "get_cert_details" {
+#   provisioner "local-exec" {
+#     command = "echo ~/mySplunkWebCert.pem"
+#   }
+#   provisioner "local-exec" {
+#     when    = destroy
+#     command = "~/mySplunkWebCert.pem"
+#   }
+# }
+
+# output "splunk_loc_cert"{
+#   value = null_resource.get_cert_details
+# }
+
 output "splunk_ent_details" {
   value =  formatlist(
     "%s, %s", 
@@ -104,6 +226,11 @@ output "splunk_ent_urls" {
 
 output "splunk_password" {
   value = random_string.splunk_password.result
+  # value = var.splunk_password
+}
+
+output "lo_connect_password" {
+  value = random_string.lo_connect_password.result
 }
 
 output "splunk_enterprise_private_ip" {

@@ -16,6 +16,19 @@ provider "helm" {
   }
 }
 
+# resource "random_string" "splunk_password" {
+#   length           = 12
+#   special          = false
+#   # override_special = "@£$"
+# }
+
+# provider "splunk" {
+#   url                  = module.instances.*.aws_instance.splunk_ent.public_ip:8089
+#   username             = "admin"
+#   password             = random_string.splunk_password.result
+#   insecure_skip_verify = true
+# }
+
 module "dashboards" {
   source           = "./modules/dashboards"
   count            = var.dashboards_enabled ? 1 : 0
@@ -78,7 +91,7 @@ module "eks" {
   ami                   = data.aws_ami.latest-ubuntu.id
   key_name              = var.key_name
   private_key_path      = var.private_key_path
-  eks_cluster_name      = join("-", [var.environment, "eks"])
+  eks_cluster_name      = join("_", [var.environment, "eks_cluster"])
 }
 
 module "eks_fargate" {
@@ -208,7 +221,10 @@ module "instances" {
   splunk_ent_ids                   = var.splunk_ent_ids
   splunk_ent_version               = var.splunk_ent_version
   splunk_ent_filename              = var.splunk_ent_filename
+  splunk_enterprise_files_local_path = var.splunk_enterprise_files_local_path
+  splunk_enterprise_license_filename = var.splunk_enterprise_license_filename
   splunk_ent_inst_type             = var.splunk_ent_inst_type
+  # splunk_password                  = random_string.splunk_password.result
   universalforwarder_filename      = var.universalforwarder_filename
   universalforwarder_url           = var.universalforwarder_url
 }
@@ -298,6 +314,10 @@ output "splunk_password" {
   value = var.instances_enabled ? module.instances.*.splunk_password : null
   # sensitive = true
 }
+output "lo_connect_password" {
+  value = var.instances_enabled ? module.instances.*.lo_connect_password : null
+  # sensitive = true
+}
 output "splunk_enterprise_private_ip" {
   value = var.instances_enabled ? module.instances.*.splunk_enterprise_private_ip : null
   # sensitive = true
@@ -305,6 +325,10 @@ output "splunk_enterprise_private_ip" {
 output "splunk_url" {
   value = var.instances_enabled ? module.instances.*.splunk_ent_urls : null
 }
+
+# output "loc_cert" {
+#   value = var.instances_enabled ? module.instances.*.splunk_loc_cert : null
+# }
 
 ### Splunk ITSI Outputs ###
 output "Splunk_ITSI_Server" {

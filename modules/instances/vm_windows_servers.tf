@@ -31,7 +31,7 @@ resource "aws_instance" "windows_server" {
   EOF
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.windows_server_ids, count.index)]))
+    Name = lower(join("-",[var.environment,element(var.windows_server_ids, count.index)]))
   }
 }
 

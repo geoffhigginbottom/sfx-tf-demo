@@ -1,5 +1,4 @@
 resource "aws_eks_cluster" "demo" {
-  # name     = join("-",[var.environment,"eks"])
   name     = var.eks_cluster_name
   # version  = 1.19
   role_arn = aws_iam_role.demo-cluster.arn

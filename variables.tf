@@ -167,7 +167,9 @@ data "aws_ami" "ms-sql-server" {
 
   filter {
     name   = "name"
-    values = ["Windows_Server-2019-English-Full-SQL_2019_Standard-*"]
+    # values = ["Windows_Server-2019-English-Full-SQL_2019_Standard-*"]
+    values = ["Windows_Server-2022-English-Full-SQL_2022_Standard-*"]
+    
   }
 
   filter {
@@ -183,7 +185,8 @@ data "aws_ami" "windows-server" {
 
   filter {
     name   = "name"
-    values = ["Windows_Server-2019-English-Full-ContainersLatest-*"]
+    # values = ["Windows_Server-2019-English-Full-ContainersLatest-*"]
+    values = ["Windows_Server-2022-English-Full-*"]
   }
 
   filter {
@@ -408,6 +411,15 @@ variable "universalforwarder_filename" {
 variable "universalforwarder_url" {
   default = {}
 }
+variable "splunk_enterprise_files_local_path" {
+  default = {}
+}
+variable "splunk_enterprise_license_filename" {
+  default = {}
+}
+# variable "splunk_password" {
+#   default = {}
+# }
 
 ### Splunk ITSI Variables ###
 variable "splunk_itsi_filename" {

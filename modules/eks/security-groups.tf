@@ -1,5 +1,6 @@
 resource "aws_security_group" "demo-cluster" {
-  name                = "terraform-eks-demo-cluster"
+  # name                = "terraform-eks-demo-cluster"
+  name                = "${var.environment}_eks_cluster_sg"
   description         = "Cluster communication with worker nodes"
   vpc_id              = var.vpc_id
 
@@ -23,8 +24,9 @@ resource "aws_security_group" "demo-cluster" {
 }
 
 resource "aws_security_group" "eks_admin_server" {
-  name                = "eks_admin_server"
-  description         = "Used by EKS Admin Server"
+  # name                = "eks_admin_server"
+  name                = "${var.environment}_eks_admin_server_sg"
+  description         = "Remote access to EKS Admin Server"
   vpc_id              = var.vpc_id
 
   ingress {

@@ -21,7 +21,7 @@ resource "aws_instance" "apache_web" {
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
   tags = {
-    Name = lower(join("_",[var.environment,element(var.apache_web_ids, count.index)]))
+    Name = lower(join("-",[var.environment,element(var.apache_web_ids, count.index)]))
   }
  
   provisioner "file" {
@@ -39,10 +39,10 @@ resource "aws_instance" "apache_web" {
     destination = "/tmp/apache_web_agent_config.yaml"
   }
 
-  provisioner "file" {
-    source      = "${path.module}/scripts/install_splunk_universal_forwarder.sh"
-    destination = "/tmp/install_splunk_universal_forwarder.sh"
-  }
+  # provisioner "file" {
+  #   source      = "${path.module}/scripts/install_splunk_universal_forwarder.sh"
+  #   destination = "/tmp/install_splunk_universal_forwarder.sh"
+  # }
 
   provisioner "remote-exec" {
     inline = [
@@ -74,11 +74,11 @@ resource "aws_instance" "apache_web" {
       "sudo mv /tmp/apache_web_agent_config.yaml /etc/otel/collector/agent_config.yaml",
       "sudo systemctl restart splunk-otel-collector",
 
-    ## Generate Vars
-      "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}",
-      "UNIVERSAL_FORWARDER_URL=${var.universalforwarder_url}",
-      "PASSWORD=${random_string.apache_universalforwarder_password.result}",
-      var.splunk_ent_count == "1" ? "SPLUNK_IP=${aws_instance.splunk_ent.0.private_ip}" : "echo skipping",
+    # ## Generate Vars
+    #   "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}",
+    #   "UNIVERSAL_FORWARDER_URL=${var.universalforwarder_url}",
+    #   "PASSWORD=${random_string.apache_universalforwarder_password.result}",
+    #   var.splunk_ent_count == "1" ? "SPLUNK_IP=${aws_instance.splunk_ent.0.private_ip}" : "echo skipping",
 
     # ## Write env vars to file (used for debugging)
     #   "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME",
@@ -86,9 +86,9 @@ resource "aws_instance" "apache_web" {
     #   "echo $PASSWORD > /tmp/PASSWORD",
     #   "echo $SPLUNK_IP > /tmp/SPLUNK_IP",
 
-    ## Install Splunk Universal Forwarder
-      "sudo chmod +x /tmp/install_splunk_universal_forwarder.sh",
-      var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
+    # ## Install Splunk Universal Forwarder
+    #   "sudo chmod +x /tmp/install_splunk_universal_forwarder.sh",
+    #   var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
     ]
   }
 

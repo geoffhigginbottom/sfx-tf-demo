@@ -151,3 +151,12 @@ variable "universalforwarder_filename" {
 variable "universalforwarder_url" {
   default = {}
 }
+variable "splunk_enterprise_files_local_path" {
+  default = {}
+}
+variable "splunk_enterprise_license_filename" {
+  default = {}
+}
+# variable "splunk_password" {
+#   default = {}
+# }

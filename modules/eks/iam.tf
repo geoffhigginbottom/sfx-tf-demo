@@ -1,5 +1,6 @@
 resource "aws_iam_role" "demo-cluster" {
-  name = "terraform-eks-demo-cluster"
+  # name = "terraform-eks-demo-cluster"
+  name = join("-",[var.environment,"cluster"])
 
   assume_role_policy = <<POLICY
 {
@@ -31,7 +32,8 @@ resource "aws_iam_role_policy_attachment" "demo-cluster-AmazonEKSVPCResourceCont
 
 
 resource "aws_iam_role" "demo-node" {
-  name = "terraform-eks-demo-node"
+  # name = "terraform-eks-demo-node"
+  name = join("-",[var.environment,"node"])
 
   assume_role_policy = <<POLICY
 {
