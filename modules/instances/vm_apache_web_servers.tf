@@ -22,6 +22,8 @@ resource "aws_instance" "apache_web" {
 
   tags = {
     Name = lower(join("-",[var.environment,element(var.apache_web_ids, count.index)]))
+    splunkit_environment_type = "non-prd"
+    splunkit_data_classification = "public"
   }
  
   provisioner "file" {
