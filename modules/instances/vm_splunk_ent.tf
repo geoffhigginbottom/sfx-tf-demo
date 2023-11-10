@@ -27,6 +27,8 @@ resource "aws_instance" "splunk_ent" {
 
   tags = {
     Name = lower(join("-",[var.environment,element(var.splunk_ent_ids, count.index)]))
+    splunkit_environment_type = "non-prd"
+    splunkit_data_classification = "public"
   }
 
   provisioner "file" {
