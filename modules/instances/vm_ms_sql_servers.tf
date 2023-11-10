@@ -46,6 +46,8 @@ resource "aws_instance" "ms_sql" {
 
   tags = {
     Name = lower(join("-",[var.environment,element(var.ms_sql_ids, count.index)]))
+    splunkit_environment_type = "non-prd"
+    splunkit_data_classification = "public"
   }
 }
 
