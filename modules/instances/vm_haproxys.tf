@@ -18,6 +18,8 @@ resource "aws_instance" "haproxy" {
   tags = {
     Name = lower(join("-",[var.environment,element(var.haproxy_ids, count.index)]))
     Environment = lower(var.environment)
+    splunkit_environment_type = "non-prd"
+    splunkit_data_classification = "public"
   }
  
   provisioner "file" {
