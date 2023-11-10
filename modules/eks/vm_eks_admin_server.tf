@@ -74,16 +74,16 @@ resource "aws_instance" "eks_admin_server" {
       "eksctl get clusters",
       "aws eks update-kubeconfig --name $EKS_CLUSTER_NAME",
 
-    # ## Install K8S Integration using OTEL
-    #   "TOKEN=${var.access_token}",
-    #   "REALM=${var.realm}",
-    #   "EKS_CLUSTER_NAME=${var.eks_cluster_name}",
-    #   "helm repo add splunk-otel-collector-chart https://signalfx.github.io/splunk-otel-collector-chart",
-    #   "helm repo update",
-    #   "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set gateway.enabled='false' --set splunkObservability.profilingEnabled='true' --generate-name splunk-otel-collector-chart/splunk-otel-collector",
-    #   # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set gateway.enabled='false' --set splunkObservability.profilingEnabled='true' --set splunkPlatform.endpoint=$protocol://$ipaddress:8088/services/collector --set splunkPlatform.token=$hec_token --set splunkPlatform.index=k8s-logs, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
-    #   # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=dAb_HPT5SSP243Af4lYikg --set clusterName=tfdemo_eks_cluster --set splunkObservability.realm=eu0 --set gateway.enabled='false' --set splunkObservability.profilingEnabled='false' --set splunkPlatform.endpoint=https://http-inputs-scv-shw-0b83708c1db0ac.stg.splunkcloud.com/services/collector/raw --set splunkPlatform.token=06686ce3-5794-4683-a69d-b005c16a948a --set splunkPlatform.index=geoff_test_2, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
-    #   # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=dAb_HPT5SSP243Af4lYikg --set clusterName=tfdemo_eks_cluster --set splunkObservability.realm=eu0 --set gateway.enabled='false' --set splunkObservability.profilingEnabled='false' --set splunkPlatform.endpoint=http://eip1.geoffh.co.uk:8088 --set splunkPlatform.token=e93d2724-43eb-4e4d-ad23-40474059c1f5 --set splunkPlatform.index=k8s-logs, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+    ## Install K8S Integration using OTEL
+      "TOKEN=${var.access_token}",
+      "REALM=${var.realm}",
+      "EKS_CLUSTER_NAME=${var.eks_cluster_name}",
+      "helm repo add splunk-otel-collector-chart https://signalfx.github.io/splunk-otel-collector-chart",
+      "helm repo update",
+      "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set gateway.enabled='false' --set splunkObservability.profilingEnabled='true' --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+      # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=$TOKEN --set clusterName=$EKS_CLUSTER_NAME --set splunkObservability.realm=$REALM --set gateway.enabled='false' --set splunkObservability.profilingEnabled='true' --set splunkPlatform.endpoint=$protocol://$ipaddress:8088/services/collector --set splunkPlatform.token=$hec_token --set splunkPlatform.index=k8s-logs, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+      # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=dAb_HPT5SSP243Af4lYikg --set clusterName=tfdemo_eks_cluster --set splunkObservability.realm=eu0 --set gateway.enabled='false' --set splunkObservability.profilingEnabled='false' --set splunkPlatform.endpoint=https://http-inputs-scv-shw-0b83708c1db0ac.stg.splunkcloud.com/services/collector/raw --set splunkPlatform.token=06686ce3-5794-4683-a69d-b005c16a948a --set splunkPlatform.index=geoff_test_2, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
+      # "helm install --set cloudProvider='aws' --set distribution='eks' --set splunkObservability.accessToken=dAb_HPT5SSP243Af4lYikg --set clusterName=tfdemo_eks_cluster --set splunkObservability.realm=eu0 --set gateway.enabled='false' --set splunkObservability.profilingEnabled='false' --set splunkPlatform.endpoint=http://eip1.geoffh.co.uk:8088 --set splunkPlatform.token=e93d2724-43eb-4e4d-ad23-40474059c1f5 --set splunkPlatform.index=k8s-logs, --generate-name splunk-otel-collector-chart/splunk-otel-collector",
       
 
     ## Deploy Hot Rod
@@ -92,9 +92,9 @@ resource "aws_instance" "eks_admin_server" {
       # "sudo chmod +x /home/ubuntu/delete_hotrod.sh",
       
     ## Deploy Astro Shop
-      "git clone https://github.com/splunk/observability-workshop",
-      "helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts",
-      "helm install astro-shop-demo open-telemetry/opentelemetry-demo --values ~/observability-workshop/workshop/oteldemo/otel-demo.yaml",
+      # "git clone https://github.com/splunk/observability-workshop",
+      # "helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts",
+      # "helm install astro-shop-demo open-telemetry/opentelemetry-demo --values ~/observability-workshop/workshop/oteldemo/otel-demo.yaml",
 
     ## Write env vars to file (used for debugging)
       "echo $AWS_ACCESS_KEY_ID > /tmp/aws_access_key_id",
