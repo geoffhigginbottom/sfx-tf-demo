@@ -32,6 +32,8 @@ resource "aws_instance" "windows_server" {
 
   tags = {
     Name = lower(join("-",[var.environment,element(var.windows_server_ids, count.index)]))
+    splunkit_environment_type = "non-prd"
+    splunkit_data_classification = "public"
   }
 }
 
