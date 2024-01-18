@@ -7,7 +7,8 @@ resource "aws_instance" "apache_web" {
   count                     = var.apache_web_count
   ami                       = var.ami
   instance_type             = var.instance_type
-  subnet_id                 = element(var.public_subnet_ids, count.index)
+  # subnet_id                 = element(var.public_subnet_ids, count.index)
+  subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   root_block_device {
     volume_size = 16
     volume_type = "gp2"
@@ -20,8 +21,12 @@ resource "aws_instance" "apache_web" {
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
+  user_data = file("${path.module}/scripts/userdata.sh")
+
   tags = {
-    Name = lower(join("-",[var.environment,element(var.apache_web_ids, count.index)]))
+    # Name = lower(join("-",[var.environment,element(var.apache_web_ids, count.index)]))
+    Name = lower(join("_",[var.environment, "apache", count.index + 1]))
+    Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"
   }
@@ -48,8 +53,8 @@ resource "aws_instance" "apache_web" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo sed -i 's/127.0.0.1.*/127.0.0.1 ${self.tags.Name}.local ${self.tags.Name} localhost/' /etc/hosts",
-      "sudo hostnamectl set-hostname ${self.tags.Name}",
+      # "sudo sed -i 's/127.0.0.1.*/127.0.0.1 ${self.tags.Name}.local ${self.tags.Name} localhost/' /etc/hosts",
+      # "sudo hostnamectl set-hostname ${self.tags.Name}",
       "sudo apt-get update",
       "sudo apt-get upgrade -y",
       
@@ -96,6 +101,7 @@ resource "aws_instance" "apache_web" {
 
   connection {
     host = self.public_ip
+    port = 2222
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)

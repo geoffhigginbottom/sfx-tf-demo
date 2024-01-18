@@ -2,12 +2,17 @@ resource "aws_instance" "gateway" {
   count                     = var.gateway_count
   ami                       = var.ami
   instance_type             = var.gateway_instance_type
-  subnet_id                 = element(var.public_subnet_ids, count.index)
+  # subnet_id                 = element(var.public_subnet_ids, count.index)
+  subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
+  user_data = file("${path.module}/scripts/userdata.sh")
+
   tags = {
-    Name = lower(join("-",[var.environment,element(var.gateway_ids, count.index)]))
+    # Name = lower(join("-",[var.environment,element(var.gateway_ids, count.index)]))
+    Name = lower(join("_",[var.environment, "gateway", count.index + 1]))
+    Environment = lower(var.environment)
     role = "collector"
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"
@@ -49,6 +54,7 @@ resource "aws_instance" "gateway" {
 
   connection {
     host = self.public_ip
+    port = 2222
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)

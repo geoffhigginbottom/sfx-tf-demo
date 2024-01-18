@@ -14,7 +14,8 @@ resource "aws_instance" "splunk_ent" {
   count                     = var.splunk_ent_count
   ami                       = var.ami
   instance_type             = var.splunk_ent_inst_type
-  subnet_id                 = element(var.public_subnet_ids, count.index)
+  # subnet_id                 = element(var.public_subnet_ids, count.index)
+  subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
     root_block_device {
     volume_size = 32
     volume_type = "gp2"
@@ -25,8 +26,12 @@ resource "aws_instance" "splunk_ent" {
     aws_security_group.splunk_ent_sg.id,
   ]
 
+  user_data = file("${path.module}/scripts/userdata.sh")
+
   tags = {
-    Name = lower(join("-",[var.environment,element(var.splunk_ent_ids, count.index)]))
+    # Name = lower(join("-",[var.environment,element(var.splunk_ent_ids, count.index)]))
+    Name = lower(join("_",[var.environment, "splunk_enterprise", count.index + 1]))
+    Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"
   }
@@ -113,6 +118,7 @@ resource "aws_instance" "splunk_ent" {
 
   connection {
     host = self.public_ip
+    port = 2222
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)
@@ -120,111 +126,22 @@ resource "aws_instance" "splunk_ent" {
   }
 }
 
-resource "aws_eip_association" "eip_assoc" {
-  instance_id   = aws_instance.splunk_ent[0].id
-  public_ip = "13.36.136.240"
-}
-
-# resource "splunk_indexes" "otel_k8s" {
-#   name                   = "otel-k8s"
-#   max_total_data_size_mb = 100000
-#   depends_on = [ aws_instance.splunk_ent ]
+# output "splunk_ent_details" {
+#   value =  formatlist(
+#     "%s, %s", 
+#     aws_instance.splunk_ent.*.tags.Name,
+#     aws_instance.splunk_ent.*.public_ip,
+#   )
 # }
 
-# resource "splunk_indexes" "otel" {
-#   name                   = "otel"
-#   max_total_data_size_mb = 100000
-#   depends_on = [ aws_instance.splunk_ent ]
+# output "splunk_ent_urls" {
+#   value =  formatlist(
+#     "%s%s:%s", 
+#     "http://",
+#     aws_instance.splunk_ent.*.public_ip,
+#     "8000",
+#   )
 # }
-
-# resource "splunk_global_http_event_collector" "http" {
-#   disabled   = false
-#   enable_ssl = false
-#   port       = 8088
-#   depends_on = [ aws_instance.splunk_ent ]
-# }
-
-# resource "splunk_inputs_http_event_collector" "otel_k8s" {
-#   name       = "otel-k8s"
-#   index      = "otel-k8s"
-#   indexes    = ["otel-k8s"]
-#   disabled   = false
-#   depends_on = [ aws_instance.splunk_ent ]
-# }
-
-# resource "splunk_inputs_http_event_collector" "otel" {
-#   name       = "otel"
-#   index      = "otel"
-#   indexes    = ["otel"]
-#   disabled   = false
-#   depends_on = [ aws_instance.splunk_ent ]
-# }
-
-# resource "splunk_authorization_roles" "lo_connect_role" {
-#   name           = "lo-connect-role"
-#   imported_roles = ["user"]
-#   capabilities   = ["edit_tokens_own"]
-#   search_indexes_allowed = ["*"]
-#   search_indexes_default = ["main"]
-#   search_time_win = "2592000"
-#   search_jobs_quota = "12"
-#   realtime_search_jobs_quota = "0"
-#   cumulative_search_jobs_quota = "12"
-#   cumulative_realtime_search_jobs_quota = "0"
-#   search_disk_quota = "100"
-#   depends_on = [ aws_instance.splunk_ent ]
-# }
-
-# resource "splunk_authentication_users" "lo_connect_user" {
-#   name              = "lo-connect"
-#   password          = random_string.lo_connect_password.result
-#   force_change_pass = false
-#   roles             = ["lo-connect-role"]
-#   depends_on = [ splunk_authorization_roles.lo_connect_role ]
-# }
-
-# resource "null_resource" "get_cert" {
-#   provisioner "local-exec" {
-#     # command = "scp ubuntu@${splunk_enterprise_private_ip}:/tmp/mySplunkWebCert.pem ~/mySplunkWebCert.pem"
-#     command = "scp ubuntu@13.36.136.240:/tmp/mySplunkWebCert.pem ~/mySplunkWebCert.pem"
-#   }
-#   provisioner "local-exec" {
-#     when    = destroy
-#     command = "~/mySplunkWebCert.pem"
-#   }
-#   depends_on = [ aws_instance.splunk_ent ]
-# }
-
-# resource "null_resource" "get_cert_details" {
-#   provisioner "local-exec" {
-#     command = "echo ~/mySplunkWebCert.pem"
-#   }
-#   provisioner "local-exec" {
-#     when    = destroy
-#     command = "~/mySplunkWebCert.pem"
-#   }
-# }
-
-# output "splunk_loc_cert"{
-#   value = null_resource.get_cert_details
-# }
-
-output "splunk_ent_details" {
-  value =  formatlist(
-    "%s, %s", 
-    aws_instance.splunk_ent.*.tags.Name,
-    aws_instance.splunk_ent.*.public_ip,
-  )
-}
-
-output "splunk_ent_urls" {
-  value =  formatlist(
-    "%s%s:%s", 
-    "http://",
-    aws_instance.splunk_ent.*.public_ip,
-    "8000",
-  )
-}
 
 output "splunk_password" {
   value = random_string.splunk_password.result

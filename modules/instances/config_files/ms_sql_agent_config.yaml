@@ -110,7 +110,6 @@ receivers:
     type: telegraf/win_services
     intervalSeconds: 1
     serviceNames:
-      - fluentdwinsvc
       - Dhcp
       - LanmanServer
       - LanmanWorkstation

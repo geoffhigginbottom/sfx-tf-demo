@@ -97,7 +97,6 @@ receivers:
     type: telegraf/win_services
     intervalSeconds: 1
     serviceNames:
-      - fluentdwinsvc
       - Dnscache
       - Dhcp
       - LanmanServer
@@ -109,7 +108,6 @@ receivers:
       - RpcEptMapper
       - MSDTC
       - SamSs
-      - docker
 
   smartagent/procstat-docker:
     type: telegraf/procstat

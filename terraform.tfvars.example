@@ -5,7 +5,6 @@
 
 ## Enable / Disable Modules ##
 eks_cluster_enabled         = false
-eks_fargate_cluster_enabled = false # Still a work in progress
 ecs_cluster_enabled         = false
 instances_enabled           = false
 proxied_instances_enabled   = false
@@ -15,67 +14,31 @@ lambda_sqs_dynamodb_enabled = false
 dashboards_enabled          = false
 detectors_enabled           = false
 
+########## DO NOT USE ############
+eks_fargate_cluster_enabled = false # Not Working Yet
+########## DO NOT USE ############
+
 ## Instance Quantities ##
-gateway_count = "2" # min 1 : max = subnet_count - there should always be at least one as Target Groups require one
-gateway_ids = [
-  "Gateway1",
-  "Gateway2",
-  "Gateway3"
-]
-
-haproxy_count = "1" # min 0 : max = subnet_count
-haproxy_ids = [
-  "haproxy1",
-  "haproxy2",
-  "haproxy3"
-  ]
-
-mysql_count = "1" # min 0 : max = subnet_count
-mysql_ids = [
-  "mysql1",
-  "mysql2",
-  "mysql3"
-  ]
-
-ms_sql_count = "1" # min 0 : max = subnet_count
-ms_sql_ids = [
-  "ms_sql1",
-  "ms_sql2",
-  "ms_sql3"
-  ]
-
-windows_server_count = "1" # min 0 : max = subnet_count
-windows_server_ids = [
-  "windows1",
-  "windows2",
-  "windows3"
-  ]
-
-apache_web_count = "1" # min 0 : max = subnet_count
-apache_web_ids = [
-  "apache1",
-  "apache2",
-  "apache3"
-  ]
-
-splunk_ent_count = "1" # min 0 : max = 1 as only one is required, used as a yes/no parameter
-splunk_ent_ids = [
-  "splunk-ent"
-  ]
+gateway_count = "0"
+apache_web_count = "0"
+haproxy_count = "0"
+mysql_count = "0"
+ms_sql_count = "0"
+windows_server_count = "0"
+splunk_ent_count = "0"
 
 ## Proxied Instances Quantities ##
-
 proxy_server_count = "1" # min 0 : max = 1 as only one is required, used as a yes/no parameter
 proxy_server_ids = [
   "proxy-server"
-  ]
+]
 
 proxied_apache_web_count = "1" # min 0 : max = subnet_count
 proxied_apache_web_ids = [
   "proxied-apache_1",
   "proxied-apache_2",
   "proxied-apache_3"
-  ]
+]
 
 proxied_windows_server_count = "1" # min 0 : max = subnet_count
 proxied_windows_server_ids = [
@@ -102,7 +65,6 @@ subnet_count            = "2"
 key_name                = "<NAME>"
 private_key_path        = "~/.ssh/id_rsa"
 instance_type           = "t2.micro"
-mysql_instance_type     = "t2.large"
 aws_access_key_id       = "<ACCCESS_KEY_ID>>"
 aws_secret_access_key   = "<SECRET_ACCESS_KEY>>"
 
@@ -111,50 +73,56 @@ soc_integration_id      = "<ID>"
 soc_routing_key         = "<ROUTING_KEY>"
 
 ### Splunk IM/APM Variables ###
-access_token             = "<ACCESS_TOKEN>"
-api_url                  = "https://api.<REALM>.signalfx.com"
-realm                    = "<REALM>"
-environment              = "<ENVIRONMENT>"
-notification_email       = "<EMAIL>"
-smart_agent_version      = "" # Optional - If left blank, latest will be installed - example value would be "5.7.1-1"
-ecs_agent_url            = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/aws_ecs/agent_fargate.yaml"
-ms_sql_agent_url         = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/Master/modules/instances/config_files/ms_sql_agent_config.yaml"
-windows_server_agent_url = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/Master/modules/instances/config_files/windows_server_agent_config.yaml"
-collector_version        = "0.40.0"
+access_token                     = "<ACCESS_TOKEN>"
+api_url                          = "https://api.<REALM>.signalfx.com"
+realm                            = "<REALM>"
+environment                      = "<ENVIRONMENT>"
+notification_email               = "<EMAIL>"
+smart_agent_version              = "" # Optional - If left blank, latest will be installed
+ecs_agent_url                    = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/aws_ecs/agent_fargate.yaml"
+ms_sql_agent_url                 = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/instances/config_files/ms_sql_agent_config.yaml"
+windows_server_agent_url         = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/instances/config_files/windows_server_agent_config.yaml"
+windows_proxied_server_agent_url = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/proxied_instances/config_files/windows_server_agent_config.yaml"
+windows_fluentd_url              = "https://s3.amazonaws.com/packages.treasuredata.com/4/windows/td-agent-4.4.1-x64.msi" #https://docs.fluentd.org/installation/install-by-msi#td-agent-v4 https://td-agent-package-browser.herokuapp.com/4/windows
+windows_tdagent_conf_url         = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/proxied_instances/config_files/td-agent.conf"
+windows_eventlog_conf_url        = "https://raw.githubusercontent.com/geoffhigginbottom/sfx-tf-demo/master/modules/proxied_instances/config_files/eventlog.conf"
+collector_version                = "0.78.0" #https://docs.splunk.com/Observability/gdi/opentelemetry/install-windows.html#otel-install-windows https://github.com/signalfx/splunk-otel-collector/releases
 
 ### Collector Variables ###
 ### https://quay.io/repository/signalfx/splunk-otel-collector?tab=tags
-gateway_instance_type      = "t2.small"
+gateway_instance_type            = "t2.small"
 
 ### Splunk Enterprise Variables ###
-splunk_ent_filename     = "splunk-8.2.3-cd0848707637-linux-2.6-amd64"
-splunk_ent_version      = "8.2.3"
-splunk_ent_inst_type    = "t2.large"
+splunk_ent_filename                 = "splunk-9.0.5-e9494146ae5c-linux-2.6-amd64.deb"
+splunk_ent_version                  = "9.0.5"
+splunk_ent_inst_type                = "t2.2xlarge"
+universalforwarder_filename         = "splunkforwarder-9.1.1-64e843ea36b1-linux-2.6-amd64.deb"
+universalforwarder_url              = "https://download.splunk.com/products/universalforwarder/releases/9.1.1/linux/splunkforwarder-9.1.1-64e843ea36b1-linux-2.6-amd64.deb"
+splunk_enterprise_files_local_path  = "~/Documents/TFDemo_Splunk_Files"   # path where splunk enterprise files resides on your local machine 
+splunk_enterprise_license_filename  = "Splunk_Enterprise_NFR_FY24_2H.xml" # this file should NOT be included in the repo, and should be located in the splunk_enterprise_files_local_path location
 
 ### Splunk ITSI Variables ###
-splunk_itsi_inst_type                             = "t2.large"
-splunk_itsi_version                               = "8.2.3"
-splunk_itsi_filename                              = "splunk-8.2.3-cd0848707637-linux-2.6-amd64.deb"
-splunk_itsi_files_local_path                      = "~/Downloads" # path where itsi files resides on your local machine 
-splunk_itsi_license_filename                      = "Splunk_ITSI_NFR_FY23.lic" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
-splunk_app_for_content_packs_filename             = "splunk-app-for-content-packs_140.spl" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
-splunk_it_service_intelligence_filename           = "splunk-it-service-intelligence_493.spl" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
-splunk_synthetic_monitoring_add_on_filename       = "splunk-synthetic-monitoring-add-on_107.tgz" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
-splunk_infrastructure_monitoring_add_on_filename  = "splunk-infrastructure-monitoring-add-on_121.tgz" # this file should NOT be included in the repo, and shoule be located in the itsi_files_local_path location
-
-### MySQL Server Variables ###
-mysql_instance_type  = "t3.xlarge
+splunk_itsi_inst_type                            = "t2.xlarge"
+splunk_itsi_version                              = "9.0.5"
+splunk_itsi_filename                             = "splunk-9.0.1-82c987350fde-linux-2.6-amd64.deb"
+splunk_itsi_files_local_path                     = "~/Documents/TFDemo_Splunk_Files"                 # path where itsi files resides on your local machine 
+splunk_itsi_license_filename                     = "Splunk_ITSI_NFR_FY24_1H.xml"                     # this file should NOT be included in the repo, and should be located in the itsi_files_local_path location
+splunk_app_for_content_packs_filename            = "splunk-app-for-content-packs_190.spl"            # this file should NOT be included in the repo, and should be located in the itsi_files_local_path location
+splunk_it_service_intelligence_filename          = "splunk-it-service-intelligence_4152.spl"         # this file should NOT be included in the repo, and should be located in the itsi_files_local_path location
+splunk_synthetic_monitoring_add_on_filename      = "splunk-synthetic-monitoring-add-on_110.tgz"      # this file should NOT be included in the repo, and should be located in the itsi_files_local_path location
+splunk_infrastructure_monitoring_add_on_filename = "splunk-infrastructure-monitoring-add-on_122.tgz" # this file should NOT be included in the repo, and should be located in the itsi_files_local_path location
 
 ### MS SQL Server Variables ###
-ms_sql_user                   = "signalfxagent"
-ms_sql_user_pwd               = "<STRONG_PWD>"
-ms_sql_administrator_pwd      = "<STRONG_PWD>"
-ms_sql_instance_type          = "t3.xlarge"
+ms_sql_user              = "signalfxagent"
+ms_sql_user_pwd          = "<STRONG_PWD>"
+ms_sql_administrator_pwd = "<STRONG_PWD>"
+ms_sql_instance_type     = "t3.xlarge"
 
 ### Windows Server Variables ###
 windows_server_administrator_pwd  = "<STRONG_PWD>"
 windows_server_instance_type      = "t3.xlarge"
 
 ### MySQL Server Variables ###
-mysql_user             = "signalfxagent"
-mysql_user_pwd         = "<STRONG_PWD>"
+mysql_user          = "signalfxagent"
+mysql_user_pwd      = "<STRONG_PWD>"
+mysql_instance_type = "t3.xlarge"
