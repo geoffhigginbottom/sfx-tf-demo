@@ -36,7 +36,7 @@ extensions:
 
 receivers:
   fluentforward:
-    endpoint: 127.0.0.1:8006
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:8006"
   hostmetrics:
     collection_interval: 10s
     scrapers:
@@ -162,6 +162,11 @@ exporters:
 
 service:
   telemetry:
+    logs:
+      encoding: json
+      level: "debug"
+      output_paths: [/mnt/logs/otel/collector.log]
+      error_output_paths: [/mnt/logs/otel/collector.log]
     metrics:
       address: "${SPLUNK_LISTEN_INTERFACE}:8888"
   extensions: [health_check, http_forwarder, zpages, memory_ballast, smartagent]

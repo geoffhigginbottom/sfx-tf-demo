@@ -11,7 +11,7 @@ resource "aws_instance" "mysql" {
 
   tags = {
     # Name = lower(join("-",[var.environment,element(var.mysql_ids, count.index)]))
-    Name = lower(join("_",[var.environment, "mysql", count.index + 1]))
+    Name = lower(join("-",[var.environment, "mysql", count.index + 1]))
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"
@@ -56,14 +56,14 @@ resource "aws_instance" "mysql" {
       "sudo mysql -u root -p'root' -e \"GRANT USAGE ON *.* TO '${var.mysql_user}'@'localhost';\"",
       "sudo mysql -u root -p'root' -e \"GRANT REPLICATION CLIENT ON *.* TO '${var.mysql_user}'@'localhost';\"",
     
-    ## Install Otel Agent
-      # "sudo curl -sSL https://dl.signalfx.com/splunk-otel-collector.sh > /tmp/splunk-otel-collector.sh",
-      # "sudo sh /tmp/splunk-otel-collector.sh --realm ${var.realm}  -- ${var.access_token} --mode agent --without-fluentd",
-      # "sudo chmod +x /tmp/update_splunk_otel_collector.sh",
-      # "sudo /tmp/update_splunk_otel_collector.sh $LBURL",
-      # "sudo mv /etc/otel/collector/agent_config.yaml /etc/otel/collector/agent_config.bak",
-      # "sudo mv /tmp/mysql_agent_config.yaml /etc/otel/collector/agent_config.yaml",
-      # "sudo systemctl restart splunk-otel-collector",
+    # Install Otel Agent
+      "sudo curl -sSL https://dl.signalfx.com/splunk-otel-collector.sh > /tmp/splunk-otel-collector.sh",
+      "sudo sh /tmp/splunk-otel-collector.sh --realm ${var.realm}  -- ${var.access_token} --mode agent --without-fluentd",
+      "sudo chmod +x /tmp/update_splunk_otel_collector.sh",
+      "sudo /tmp/update_splunk_otel_collector.sh $LBURL",
+      "sudo mv /etc/otel/collector/agent_config.yaml /etc/otel/collector/agent_config.bak",
+      "sudo mv /tmp/mysql_agent_config.yaml /etc/otel/collector/agent_config.yaml",
+      "sudo systemctl restart splunk-otel-collector",
 
     ## Generate Vars
       "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}",
@@ -75,11 +75,12 @@ resource "aws_instance" "mysql" {
       "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME",
       "echo $UNIVERSAL_FORWARDER_URL > /tmp/UNIVERSAL_FORWARDER_URL",
       "echo $PASSWORD > /tmp/PASSWORD",
-      "echo $SPLUNK_IP > /tmp/SPLUNK_IP",
+      var.splunk_ent_count == "1" ? "echo $SPLUNK_IP > /tmp/SPLUNK_IP" : "echo skipping",
 
     ## Install Splunk Universal Forwarder
       "sudo chmod +x /tmp/install_splunk_universal_forwarder.sh",
-      # var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
+      var.splunk_ent_count == "1" ? "sudo /tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
+      # "sudo /tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP"
     ]
   }
 

@@ -87,11 +87,12 @@ resource "aws_instance" "haproxy" {
       "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME",
       "echo $UNIVERSAL_FORWARDER_URL > /tmp/UNIVERSAL_FORWARDER_URL",
       "echo $PASSWORD > /tmp/PASSWORD",
-      "echo $SPLUNK_IP > /tmp/SPLUNK_IP",
+      var.splunk_ent_count == "1" ? "echo $SPLUNK_IP > /tmp/SPLUNK_IP" : "echo skipping",
 
     ## Install Splunk Universal Forwarder
       "sudo chmod +x /tmp/install_splunk_universal_forwarder.sh",
       var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
+      # "sudo /tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP"
     ]
   }
 
