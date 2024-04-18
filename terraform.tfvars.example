@@ -96,10 +96,10 @@ gateway_instance_type            = "t2.small"
 splunk_ent_filename                 = "splunk-9.0.5-e9494146ae5c-linux-2.6-amd64.deb"
 splunk_ent_version                  = "9.0.5"
 splunk_ent_inst_type                = "t2.2xlarge"
-universalforwarder_filename         = "splunkforwarder-9.1.1-64e843ea36b1-linux-2.6-amd64.deb"
-universalforwarder_url              = "https://download.splunk.com/products/universalforwarder/releases/9.1.1/linux/splunkforwarder-9.1.1-64e843ea36b1-linux-2.6-amd64.deb"
+universalforwarder_filename         = "splunkforwarder-9.2.1-78803f08aabb-linux-2.6-amd64.deb"
+universalforwarder_url              = "https://download.splunk.com/products/universalforwarder/releases/9.2.1/linux/splunkforwarder-9.2.1-78803f08aabb-linux-2.6-amd64.deb"
 splunk_enterprise_files_local_path  = "~/Documents/TFDemo_Splunk_Files"   # path where splunk enterprise files resides on your local machine 
-splunk_enterprise_license_filename  = "Splunk_Enterprise_NFR_FY24_2H.xml" # this file should NOT be included in the repo, and should be located in the splunk_enterprise_files_local_path location
+splunk_enterprise_license_filename  = "Splunk_Enterprise_NFR_FY25_2H.xml" # this file should NOT be included in the repo, and should be located in the splunk_enterprise_files_local_path location
 
 ### Splunk ITSI Variables ###
 splunk_itsi_inst_type                            = "t2.xlarge"
