@@ -32,6 +32,9 @@ variable "windows_server_ami" {
 variable "windows_server_administrator_pwd" {
   default =[]
 }
+variable "my_public_ip" {
+  default = []
+}
 
 ### SignalFX Variables ###
 variable "access_token" {

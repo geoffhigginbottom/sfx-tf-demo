@@ -162,6 +162,7 @@ module "proxied_instances" {
   collector_version                = var.collector_version
   proxy_server_count               = var.proxy_server_count
   proxy_server_ids                 = var.proxy_server_ids
+  my_public_ip                     = "${chomp(data.http.my_public_ip.response_body)}"
 }
 
 module "instances" {
