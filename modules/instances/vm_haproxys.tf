@@ -2,7 +2,6 @@ resource "aws_instance" "haproxy" {
   count                     = var.haproxy_count
   ami                       = var.ami
   instance_type             = var.instance_type
-  # subnet_id                 = element(var.public_subnet_ids, count.index)
   subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   root_block_device {
     volume_size = 16
@@ -16,12 +15,12 @@ resource "aws_instance" "haproxy" {
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
-  user_data = file("${path.module}/scripts/userdata.sh")
+  ### needed for Splunk Golden Image to enable SSH
+  ### the 'ssh connection' should use the same user
+  # user_data = file("${path.module}/scripts/userdata.sh")
 
   tags = {
-    # Name = lower(join("-",[var.environment,element(var.haproxy_ids, count.index)]))
     Name = lower(join("_",[var.environment, "haproxy", count.index + 1]))
-    Environment = lower(var.environment)
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"
@@ -43,8 +42,8 @@ resource "aws_instance" "haproxy" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/scripts/install_splunk_universal_forwarder.sh"
-    destination = "/tmp/install_splunk_universal_forwarder.sh"
+    source      = "${path.module}/scripts/install_splunk_universal_forwarder_haproxy.sh"
+    destination = "/tmp/install_splunk_universal_forwarder_haproxy.sh"
   }
 
   provisioner "remote-exec" {
@@ -78,27 +77,26 @@ resource "aws_instance" "haproxy" {
       "sudo systemctl restart splunk-otel-collector",
     
     ## Generate Vars
-      "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}",
-      "UNIVERSAL_FORWARDER_URL=${var.universalforwarder_url}",
-      "PASSWORD=${random_string.apache_universalforwarder_password.result}",
-      var.splunk_ent_count == "1" ? "SPLUNK_IP=${aws_instance.splunk_ent.0.private_ip}" : "echo skipping",
+      var.splunk_ent_count == "1" ? "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "UNIVERSAL_FORWARDER_URL=${var.universalforwarder_url}" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "PASSWORD=${random_string.splunk_password.result}" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "SPLUNK_IP=${aws_instance.splunk_ent.0.private_ip}" : "echo skipping because Splunk Ent is not deployed",
 
     ## Write env vars to file (used for debugging)
-      "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME",
-      "echo $UNIVERSAL_FORWARDER_URL > /tmp/UNIVERSAL_FORWARDER_URL",
-      "echo $PASSWORD > /tmp/PASSWORD",
-      var.splunk_ent_count == "1" ? "echo $SPLUNK_IP > /tmp/SPLUNK_IP" : "echo skipping",
+      var.splunk_ent_count == "1" ? "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "echo $UNIVERSAL_FORWARDER_URL > /tmp/UNIVERSAL_FORWARDER_URL" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "echo $PASSWORD > /tmp/UNIVERSAL_FORWARDER_PASSWORD" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "echo $SPLUNK_IP > /tmp/SPLUNK_IP" : "echo skipping because Splunk Ent is not deployed",
 
     ## Install Splunk Universal Forwarder
       "sudo chmod +x /tmp/install_splunk_universal_forwarder.sh",
-      var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
-      # "sudo /tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP"
+      var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder_haproxy.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
     ]
   }
 
   connection {
     host = self.public_ip
-    port = 2222
+    port = 22
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)

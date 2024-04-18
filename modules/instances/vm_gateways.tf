@@ -7,7 +7,10 @@ resource "aws_instance" "gateway" {
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
-  user_data = file("${path.module}/scripts/userdata.sh")
+  ### needed for Splunk Golden Image to enable SSH
+  ### the 'ssh connection' should use the same user
+  # user_data = file("${path.module}/scripts/userdata.sh")
+
 
   tags = {
     # Name = lower(join("-",[var.environment,element(var.gateway_ids, count.index)]))
@@ -54,7 +57,7 @@ resource "aws_instance" "gateway" {
 
   connection {
     host = self.public_ip
-    port = 2222
+    port = 22
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)

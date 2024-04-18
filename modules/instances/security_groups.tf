@@ -13,10 +13,10 @@ resource "aws_security_group" "instances_sg" {
 
   ## Allow SSH - required for Terraform
   ingress {
-    from_port   = 2222
-    to_port     = 2222
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ## Allow RDP - Enable Windows Remote Desktop
@@ -24,7 +24,7 @@ resource "aws_security_group" "instances_sg" {
     from_port   = 3389
     to_port     = 3389
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ## Allow WinRM - Enable Windows Remote Desktop
@@ -32,7 +32,7 @@ resource "aws_security_group" "instances_sg" {
     from_port   = 5985
     to_port     = 5985
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ## Allow HTTP
@@ -40,7 +40,7 @@ resource "aws_security_group" "instances_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ## Allow Trace data direct to Gateway Nodes
@@ -48,7 +48,7 @@ resource "aws_security_group" "instances_sg" {
     from_port   = 9411
     to_port     = 9411
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ## Allow all egress traffic
@@ -70,21 +70,21 @@ resource "aws_security_group" "splunk_ent_sg" {
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ingress {
     from_port   = 8089
     to_port     = 8089
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   ingress {
     from_port   = 8088
     to_port     = 8088
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 
   #   ingress {
@@ -100,6 +100,6 @@ resource "aws_security_group" "splunk_ent_sg" {
     from_port   = 9997
     to_port     = 9997
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.my_public_ip}/32"]
   }
 }

@@ -1,9 +1,3 @@
-resource "random_string" "splunk_password" {
-  length           = 12
-  special          = false
-  # override_special = "@£$"
-}
-
 resource "random_string" "lo_connect_password" {
   length           = 12
   special          = false
@@ -26,7 +20,9 @@ resource "aws_instance" "splunk_ent" {
     aws_security_group.splunk_ent_sg.id,
   ]
 
-  user_data = file("${path.module}/scripts/userdata.sh")
+  ### needed for Splunk Golden Image to enable SSH
+  ### the 'ssh connection' should use the same user
+  # user_data = file("${path.module}/scripts/userdata.sh")
 
   tags = {
     # Name = lower(join("-",[var.environment,element(var.splunk_ent_ids, count.index)]))
@@ -118,7 +114,7 @@ resource "aws_instance" "splunk_ent" {
 
   connection {
     host = self.public_ip
-    port = 2222
+    port = 22
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)
@@ -143,10 +139,10 @@ resource "aws_instance" "splunk_ent" {
 #   )
 # }
 
-output "splunk_password" {
-  value = random_string.splunk_password.result
-  # value = var.splunk_password
-}
+# output "splunk_password" {
+#   value = random_string.splunk_password.result
+#   # value = var.splunk_password
+# }
 
 output "lo_connect_password" {
   value = random_string.lo_connect_password.result

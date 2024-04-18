@@ -16,19 +16,6 @@ provider "helm" {
   }
 }
 
-# resource "random_string" "splunk_password" {
-#   length           = 12
-#   special          = false
-#   # override_special = "@£$"
-# }
-
-# provider "splunk" {
-#   url                  = module.instances.*.aws_instance.splunk_ent.public_ip:8089
-#   username             = "admin"
-#   password             = random_string.splunk_password.result
-#   insecure_skip_verify = true
-# }
-
 module "dashboards" {
   source           = "./modules/dashboards"
   count            = var.dashboards_enabled ? 1 : 0
@@ -48,12 +35,14 @@ module "detectors" {
 }
 
 module "vpc" {
-  source         = "./modules/vpc"
-  vpc_name       = var.environment
-  vpc_cidr_block = var.vpc_cidr_block
-  subnet_count   = var.subnet_count
-  region         = lookup(var.aws_region, var.region)
-  environment    = var.environment
+  source                = "./modules/vpc"
+  vpc_name              = var.environment
+  vpc_cidr_block        = var.vpc_cidr_block
+  subnet_count          = var.subnet_count
+  region                = lookup(var.aws_region, var.region)
+  environment           = var.environment
+  aws_access_key_id     = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
 }
 
 module "aws_ecs" {
@@ -224,9 +213,9 @@ module "instances" {
   splunk_enterprise_files_local_path = var.splunk_enterprise_files_local_path
   splunk_enterprise_license_filename = var.splunk_enterprise_license_filename
   splunk_ent_inst_type             = var.splunk_ent_inst_type
-  # splunk_password                  = random_string.splunk_password.result
   universalforwarder_filename      = var.universalforwarder_filename
   universalforwarder_url           = var.universalforwarder_url
+  my_public_ip                     = "${chomp(data.http.my_public_ip.response_body)}"
 }
 
 module "itsi_o11y_cp" {
@@ -258,99 +247,42 @@ module "itsi_o11y_cp" {
 }
 
 ### Instances Outputs ###
-output "OTEL_Gateway_Servers" {
-  value = var.instances_enabled ? module.instances.*.gateway_details : null
-}
-output "HAProxy_Servers" {
-  value = var.instances_enabled ? module.instances.*.haproxy_details : null
-}
-output "MySQL_Servers" {
-  value = var.instances_enabled ? module.instances.*.mysql_details : null
-}
-output "MS_SQL_Servers" {
-  value = var.instances_enabled ? module.instances.*.ms_sql_details : null
-}
-output "Apache_Web_Servers" {
-  value = var.instances_enabled ? module.instances.*.apache_web_details : null
-}
-output "collector_lb_dns" {
-  value = var.instances_enabled ? module.instances.*.gateway_lb_int_dns : null
-}
-output "SQS_Test_Server" {
-  value = var.lambda_sqs_dynamodb_enabled ? module.lambda_sqs_dynamodb.*.sqs_test_server_details : null
-}
-output "Windows_Servers" {
-  value = var.instances_enabled ? module.instances.*.windows_server_details : null
-}
+output "OTEL_Gateway_Servers" {value = var.gateway_count > 0 ? module.instances.*.gateway_details : null}
+output "HAProxy_Servers" {value = var.haproxy_count > 0 ? module.instances.*.haproxy_details : null}
+output "MySQL_Servers" {value = var.mysql_count > 0 ? module.instances.*.mysql_details : null}
+output "MS_SQL_Servers" {value = var.ms_sql_count > 0 ? module.instances.*.ms_sql_details : null}
+output "Apache_Web_Servers" {value = var.apache_web_count > 0 ? module.instances.*.apache_web_details : null}
+output "Windows_Servers" {value = var.windows_server_count > 0 ? module.instances.*.windows_server_details : null}
+
+output "collector_lb_dns" {value = var.instances_enabled ? module.instances.*.gateway_lb_int_dns : null}
+output "SQS_Test_Server" {value = var.lambda_sqs_dynamodb_enabled ? module.lambda_sqs_dynamodb.*.sqs_test_server_details : null}
 
 ### Proxied Instances Outputs ###
-output "Proxied_Apache_Web_Servers" {
-  value = var.proxied_instances_enabled ? module.proxied_instances.*.proxied_apache_web_details : null
-}
-
-output "Proxied_Windows_Servers" {
-  value = var.proxied_instances_enabled ? module.proxied_instances.*.proxied_windows_server_details : null
-}
-
-output "Proxy_Server" {
-  value = var.proxied_instances_enabled ? module.proxied_instances.*.proxy_server_details : null
-}
+output "Proxied_Apache_Web_Servers" {value = var.proxied_instances_enabled ? module.proxied_instances.*.proxied_apache_web_details : null}
+output "Proxied_Windows_Servers" {value = var.proxied_instances_enabled ? module.proxied_instances.*.proxied_windows_server_details : null}
+output "Proxy_Server" {value = var.proxied_instances_enabled ? module.proxied_instances.*.proxy_server_details : null}
 
 ### Phone Shop Outputs ###
-output "Phone_Shop_Server" {
-  value = var.phone_shop_enabled ? module.phone_shop.*.phone_shop_server_details : null
-}
+output "Phone_Shop_Server" {value = var.phone_shop_enabled ? module.phone_shop.*.phone_shop_server_details : null}
 
 ### ECS Outputs ###
-output "ECS_ALB_hostname" {
-  value = var.ecs_cluster_enabled ? module.aws_ecs.*.ecs_alb_hostname : null
-}
+output "ECS_ALB_hostname" {value = var.ecs_cluster_enabled ? module.aws_ecs.*.ecs_alb_hostname : null}
 
 ### Splunk Enterprise Outputs ###
-output "Splunk_Enterprise_Server" {
-  value = var.instances_enabled ? module.instances.*.splunk_ent_details : null
-}
-output "splunk_password" {
-  value = var.instances_enabled ? module.instances.*.splunk_password : null
-  # sensitive = true
-}
-output "lo_connect_password" {
-  value = var.instances_enabled ? module.instances.*.lo_connect_password : null
-  # sensitive = true
-}
-output "splunk_enterprise_private_ip" {
-  value = var.instances_enabled ? module.instances.*.splunk_enterprise_private_ip : null
-  # sensitive = true
-}
-output "splunk_url" {
-  value = var.instances_enabled ? module.instances.*.splunk_ent_urls : null
-}
-
-# output "loc_cert" {
-#   value = var.instances_enabled ? module.instances.*.splunk_loc_cert : null
-# }
+# output "Splunk_Enterprise_Server" {value = var.splunk_ent_count > 0 ? module.instances.*.splunk_ent_details : null}
+output "splunk_password" {value = var.splunk_ent_count > 0 ? module.instances.*.splunk_password : null}
+output "lo_connect_password" {value = var.splunk_ent_count > 0 ? module.instances.*.lo_connect_password : null}
+output "splunk_enterprise_private_ip" {value = var.splunk_ent_count > 0 ? module.instances.*.splunk_enterprise_private_ip : null}
+output "splunk_url" {value = var.splunk_ent_count > 0 ? module.instances.*.splunk_ent_urls : null}
 
 ### Splunk ITSI Outputs ###
-output "Splunk_ITSI_Server" {
-  value = var.itsi_o11y_cp_enabled ? module.itsi_o11y_cp.*.splunk_itsi_details : null
-}
-output "Splunk_ITSI_Password" {
-  value = var.itsi_o11y_cp_enabled ? module.itsi_o11y_cp.*.splunk_itsi_password : null
-  # sensitive = true
-}
-output "Splunk_ITSI_URL" {
-  value = var.itsi_o11y_cp_enabled ? module.itsi_o11y_cp.*.splunk_itsi_urls : null
-}
+output "Splunk_ITSI_Server" {value = var.itsi_o11y_cp_enabled ? module.itsi_o11y_cp.*.splunk_itsi_details : null}
+output "Splunk_ITSI_Password" {value = var.itsi_o11y_cp_enabled ? module.itsi_o11y_cp.*.splunk_itsi_password : null}
+output "Splunk_ITSI_URL" {value = var.itsi_o11y_cp_enabled ? module.itsi_o11y_cp.*.splunk_itsi_urls : null}
 
 ### Detector Outputs
-output "detector_promoting_tags_id" {
-  value = var.detectors_enabled ? module.detectors.*.detector_promoting_tags_id : null
-}
+output "detector_promoting_tags_id" {value = var.detectors_enabled ? module.detectors.*.detector_promoting_tags_id : null}
 
 ### EKS Outputs ###
-# output "eks_cluster_endpoint" {
-#   value = var.eks_cluster_enabled ? module.eks.*.eks_cluster_endpoint : null
-# }
-output "eks_admin_server" {
-  value = var.eks_cluster_enabled ? module.eks.*.eks_admin_server_details : null
-}
+# output "eks_cluster_endpoint" {value = var.eks_cluster_enabled ? module.eks.*.eks_cluster_endpoint : null}
+output "eks_admin_server" {value = var.eks_cluster_enabled ? module.eks.*.eks_admin_server_details : null}

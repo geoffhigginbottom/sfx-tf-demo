@@ -91,6 +91,9 @@ variable "windows_server_agent_url" {
 variable "aws_api_gateway_deployment_retailorder_invoke_url" {
   default = {}
 }
+variable "my_public_ip" {
+  default = []
+}
 
 ## EKS Variables ##
 variable "eks_cluster_name" {

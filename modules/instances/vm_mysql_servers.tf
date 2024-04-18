@@ -2,15 +2,15 @@ resource "aws_instance" "mysql" {
   count                     = var.mysql_count
   ami                       = var.ami
   instance_type             = var.mysql_instance_type
-  # subnet_id                 = element(var.public_subnet_ids, count.index)
   subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
 
-  user_data = file("${path.module}/scripts/userdata.sh")
+  ### needed for Splunk Golden Image to enable SSH
+  ### the 'ssh connection' should use the same user
+  # user_data = file("${path.module}/scripts/userdata.sh") 
 
   tags = {
-    # Name = lower(join("-",[var.environment,element(var.mysql_ids, count.index)]))
     Name = lower(join("-",[var.environment, "mysql", count.index + 1]))
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
@@ -23,8 +23,8 @@ resource "aws_instance" "mysql" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/scripts/update_splunk_otel_collector.sh"
-    destination = "/tmp/update_splunk_otel_collector.sh"
+    source      = "${path.module}/scripts/update_splunk_otel_collector_conf_mysql.sh"
+    destination = "/tmp/update_splunk_otel_collector_conf_mysql.sh"
   }
 
   provisioner "file" {
@@ -33,8 +33,8 @@ resource "aws_instance" "mysql" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/scripts/install_splunk_universal_forwarder.sh"
-    destination = "/tmp/install_splunk_universal_forwarder.sh"
+    source      = "${path.module}/scripts/install_splunk_universal_forwarder_mysql.sh"
+    destination = "/tmp/install_splunk_universal_forwarder_mysql.sh"
   }
 
   provisioner "remote-exec" {
@@ -48,6 +48,8 @@ resource "aws_instance" "mysql" {
       "REALM=${var.realm}",
       "HOSTNAME=${self.tags.Name}",
       "LBURL=${aws_lb.gateway-lb.dns_name}",
+      "MYSQLUSER=${var.mysql_user}",
+      "MYSQLPWD=${var.mysql_user_pwd}",
 
     ## Install MySQL
       "sudo chmod +x /tmp/install_mysql.sh",
@@ -59,34 +61,32 @@ resource "aws_instance" "mysql" {
     # Install Otel Agent
       "sudo curl -sSL https://dl.signalfx.com/splunk-otel-collector.sh > /tmp/splunk-otel-collector.sh",
       "sudo sh /tmp/splunk-otel-collector.sh --realm ${var.realm}  -- ${var.access_token} --mode agent --without-fluentd",
-      "sudo chmod +x /tmp/update_splunk_otel_collector.sh",
-      "sudo /tmp/update_splunk_otel_collector.sh $LBURL",
       "sudo mv /etc/otel/collector/agent_config.yaml /etc/otel/collector/agent_config.bak",
       "sudo mv /tmp/mysql_agent_config.yaml /etc/otel/collector/agent_config.yaml",
-      "sudo systemctl restart splunk-otel-collector",
+      "sudo chmod +x /tmp/update_splunk_otel_collector_conf_mysql.sh",
+      "sudo /tmp/update_splunk_otel_collector_conf_mysql.sh $LBURL $MYSQLUSER $MYSQLPWD",
 
     ## Generate Vars
-      "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}",
-      "UNIVERSAL_FORWARDER_URL=${var.universalforwarder_url}",
-      "PASSWORD=${random_string.apache_universalforwarder_password.result}",
-      var.splunk_ent_count == "1" ? "SPLUNK_IP=${aws_instance.splunk_ent.0.private_ip}" : "echo skipping",
+      var.splunk_ent_count == "1" ? "UNIVERSAL_FORWARDER_FILENAME=${var.universalforwarder_filename}" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "UNIVERSAL_FORWARDER_URL=${var.universalforwarder_url}" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "PASSWORD=${random_string.splunk_password.result}" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "SPLUNK_IP=${aws_instance.splunk_ent.0.private_ip}" : "echo skipping because Splunk Ent is not deployed",
 
     ## Write env vars to file (used for debugging)
-      "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME",
-      "echo $UNIVERSAL_FORWARDER_URL > /tmp/UNIVERSAL_FORWARDER_URL",
-      "echo $PASSWORD > /tmp/PASSWORD",
-      var.splunk_ent_count == "1" ? "echo $SPLUNK_IP > /tmp/SPLUNK_IP" : "echo skipping",
+      var.splunk_ent_count == "1" ? "echo $UNIVERSAL_FORWARDER_FILENAME > /tmp/UNIVERSAL_FORWARDER_FILENAME" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "echo $UNIVERSAL_FORWARDER_URL > /tmp/UNIVERSAL_FORWARDER_URL" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "echo $PASSWORD > /tmp/UNIVERSAL_FORWARDER_PASSWORD" : "echo skipping because Splunk Ent is not deployed",
+      var.splunk_ent_count == "1" ? "echo $SPLUNK_IP > /tmp/SPLUNK_IP" : "echo skipping because Splunk Ent is not deployed",
 
     ## Install Splunk Universal Forwarder
-      "sudo chmod +x /tmp/install_splunk_universal_forwarder.sh",
-      var.splunk_ent_count == "1" ? "sudo /tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping",
-      # "sudo /tmp/install_splunk_universal_forwarder.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP"
+      "sudo chmod +x /tmp/install_splunk_universal_forwarder_mysql.sh",
+      var.splunk_ent_count == "1" ? "/tmp/install_splunk_universal_forwarder_mysql.sh $UNIVERSAL_FORWARDER_FILENAME $UNIVERSAL_FORWARDER_URL $PASSWORD $SPLUNK_IP" : "echo skipping because Splunk Ent is not deployed",
     ]
   }
 
   connection {
     host = self.public_ip
-    port = 2222
+    port = 22
     type = "ssh"
     user = "ubuntu"
     private_key = file(var.private_key_path)

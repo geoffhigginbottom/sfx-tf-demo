@@ -41,6 +41,9 @@ variable "ms_sql_ami" {
 variable "windows_server_ami" {
   default = {}
 }
+variable "my_public_ip" {
+  default = []
+}
 
 ### SignalFX Variables ###
 variable "access_token" {
