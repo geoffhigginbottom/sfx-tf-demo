@@ -2,7 +2,6 @@ resource "aws_instance" "gateway" {
   count                     = var.gateway_count
   ami                       = var.ami
   instance_type             = var.gateway_instance_type
-  # subnet_id                 = element(var.public_subnet_ids, count.index)
   subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
@@ -13,8 +12,7 @@ resource "aws_instance" "gateway" {
 
 
   tags = {
-    # Name = lower(join("-",[var.environment,element(var.gateway_ids, count.index)]))
-    Name = lower(join("_",[var.environment, "gateway", count.index + 1]))
+    Name = lower(join("-",[var.environment, "gateway", count.index + 1]))
     Environment = lower(var.environment)
     role = "collector"
     splunkit_environment_type = "non-prd"
@@ -46,12 +44,6 @@ resource "aws_instance" "gateway" {
     ## Configure motd
       "sudo curl -s https://raw.githubusercontent.com/signalfx/observability-workshop/master/cloud-init/motd -o /etc/motd",
       "sudo chmod -x /etc/update-motd.d/*",
-
-    ## Splunk Forwarder
-      # "sudo wget -O /tmp/splunkforwarder-8.1.2-545206cc9f70-Linux-x86_64.tgz 'https://www.splunk.com/bin/splunk/DownloadActivityServlet?architecture=x86_64&platform=linux&version=8.1.2&product=universalforwarder&filename=splunkforwarder-8.1.2-545206cc9f70-Linux-x86_64.tgz&wget=true'",
-      # "sudo tar -zxvf /tmp/splunkforwarder-8.1.2-545206cc9f70-Linux-x86_64.tgz -C /opt",
-      # "sudo /opt/splunkforwarder/bin/splunk cmd splunkd rest --noauth POST /services/authentication/users 'name=admin&password=password&roles=admin'",
-      # "sudo /opt/splunkforwarder/bin/splunk start --accept-license",
     ]
   }
 

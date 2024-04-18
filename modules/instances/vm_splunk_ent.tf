@@ -8,7 +8,6 @@ resource "aws_instance" "splunk_ent" {
   count                     = var.splunk_ent_count
   ami                       = var.ami
   instance_type             = var.splunk_ent_inst_type
-  # subnet_id                 = element(var.public_subnet_ids, count.index)
   subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
     root_block_device {
     volume_size = 32
@@ -25,8 +24,7 @@ resource "aws_instance" "splunk_ent" {
   # user_data = file("${path.module}/scripts/userdata.sh")
 
   tags = {
-    # Name = lower(join("-",[var.environment,element(var.splunk_ent_ids, count.index)]))
-    Name = lower(join("_",[var.environment, "splunk_enterprise", count.index + 1]))
+    Name = lower(join("-",[var.environment, "splunk-enterprise", count.index + 1]))
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"

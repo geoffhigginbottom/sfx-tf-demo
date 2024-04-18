@@ -2,7 +2,6 @@ resource "aws_instance" "ms_sql" {
   count                     = var.ms_sql_count
   ami                       = var.ms_sql_ami
   instance_type             = var.ms_sql_instance_type
-  # subnet_id                 = element(var.public_subnet_ids, count.index)
   subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
@@ -46,8 +45,7 @@ resource "aws_instance" "ms_sql" {
   EOF
 
   tags = {
-    # Name = lower(join("-",[var.environment,element(var.ms_sql_ids, count.index)]))
-    Name = lower(join("_",[var.environment, "ms_sql", count.index + 1]))
+    Name = lower(join("-",[var.environment, "ms-sql", count.index + 1]))
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"

@@ -32,7 +32,6 @@ resource "aws_instance" "windows_server" {
   EOF
 
   tags = {
-    # Name = lower(join("-",[var.environment,element(var.windows_server_ids, count.index)]))
     Name = lower(join("-",[var.environment, "windows", count.index + 1]))
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"

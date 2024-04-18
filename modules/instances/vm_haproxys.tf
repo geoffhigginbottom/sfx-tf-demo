@@ -20,7 +20,7 @@ resource "aws_instance" "haproxy" {
   # user_data = file("${path.module}/scripts/userdata.sh")
 
   tags = {
-    Name = lower(join("_",[var.environment, "haproxy", count.index + 1]))
+    Name = lower(join("-",[var.environment, "haproxy", count.index + 1]))
     Environment = lower(var.environment)
     splunkit_environment_type = "non-prd"
     splunkit_data_classification = "public"
