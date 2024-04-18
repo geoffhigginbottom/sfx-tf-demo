@@ -27,39 +27,33 @@ resource "aws_instance" "proxied_windows_server" {
     $WebClient.DownloadFile($source,$dest)
     Start-Process msiexec.exe -Wait -ArgumentList '/I C:\Windows\Temp\splunk-otel-collector-${var.collector_version}-amd64.msi /quiet'
 
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_ACCESS_TOKEN' -Value ${var.access_token}
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_API_URL' -Value "https://api.${var.realm}.signalfx.com"
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_BUNDLE_DIR' -Value "C:\Program Files\Splunk\OpenTelemetry Collector\agent-bundle"
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_INGEST_URL' -Value "https://ingest.${var.realm}.signalfx.com"
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_MEMORY_TOTAL_MIB' -Value "512"
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_REALM' -Value ${var.realm}
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_TRACE_URL' -Value "https://ingest.${var.realm}.signalfx.com/v2/trace"
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_HEC_TOKEN' -Value ${var.access_token}
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_HEC_URL' -Value "https://ingest.eu0.signalfx.com/v1/log"
-    
+    $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Services\splunk-otel-collector"
+    $valueName = "Environment"
+    $newValue = @(
+        "SPLUNK_ACCESS_TOKEN=${var.access_token}",
+        "SPLUNK_API_URL=https://api.${var.realm}.signalfx.com",
+        "SPLUNK_BUNDLE_DIR=C:\Program Files\Splunk\OpenTelemetry Collector\agent-bundle",
+        "SPLUNK_CONFIG=C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml",
+        "SPLUNK_HEC_TOKEN=${var.access_token}",
+        "SPLUNK_HEC_URL=https://ingest.${var.realm}.signalfx.com/v1/log",
+        "SPLUNK_INGEST_URL=https://ingest.${var.realm}.signalfx.com",
+        "SPLUNK_REALM=${var.realm}",
+        "SPLUNK_TRACE_URL=https://ingest.${var.realm}.signalfx.com/v2/trace"
+    )
+
+    # Check if the registry key exists
+    if (Test-Path $registryPath) {
+        # Update the registry value
+        Set-ItemProperty -Path $registryPath -Name $valueName -Value $newValue -Type MultiString
+        Write-Host "Registry value '$valueName' updated successfully."
+    } else {
+        Write-Host "Registry path '$registryPath' does not exist."
+    }
+
     $source = "${var.windows_proxied_server_agent_url}"
     $dest = "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
     $WebClient.DownloadFile($source,$dest)
     Start-Service splunk-otel-collector
-
-    $source = "${var.windows_fluentd_url}"
-    $dest = "C:\Windows\Temp\td-agent.msi"
-    $WebClient.DownloadFile($source,$dest)
-    Start-Process msiexec.exe -Wait '/I C:\Windows\Temp\td-agent.msi /quiet'
-    
-    Stop-Service fluentdwinsvc
-
-    $source = "${var.windows_tdagent_conf_url}"
-    $dest = "C:\opt\td-agent\etc\td-agent\td-agent.conf"
-    $WebClient.DownloadFile($source,$dest)
-    
-    New-Item -Path 'C:\opt\td-agent\etc\td-agent\conf.d' -ItemType Directory
-
-    $source = "${var.windows_eventlog_conf_url}"
-    $dest = "C:\opt\td-agent\etc\td-agent\conf.d\eventlog.conf"
-    $WebClient.DownloadFile($source,$dest)
-
-    Start-Service fluentdwinsvc
 
     Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0
     Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0
