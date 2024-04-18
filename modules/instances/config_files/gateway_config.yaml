@@ -3,14 +3,14 @@
 
 extensions:
   health_check:
-    endpoint: 0.0.0.0:13133
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:13133"
   http_forwarder:
     ingress:
-      endpoint: 0.0.0.0:6060
+      endpoint: "${SPLUNK_LISTEN_INTERFACE}:6060"
     egress:
       endpoint: "https://api.${SPLUNK_REALM}.signalfx.com"
   zpages:
-    endpoint: 0.0.0.0:55679
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:55679"
 
 receivers:
     # GH Added Logs and Host Metrics Receiver to enable collection from the Gateway itself
@@ -33,19 +33,19 @@ receivers:
   jaeger:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:14250
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:14250"
       thrift_binary:
-        endpoint: 0.0.0.0:6832
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:6832"
       thrift_compact:
-        endpoint: 0.0.0.0:6831
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:6831"
       thrift_http:
-        endpoint: 0.0.0.0:14268
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:14268"
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:4317"
       http:
-        endpoint: 0.0.0.0:4318
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:4318"
   # This section is used to collect the OpenTelemetry Collector metrics
   # Even if just a Splunk APM customer, these metrics are included
   prometheus/internal:
@@ -54,7 +54,7 @@ receivers:
       - job_name: 'otel-collector'
         scrape_interval: 10s
         static_configs:
-        - targets: ['0.0.0.0:8888']
+        - targets: ['${SPLUNK_LISTEN_INTERFACE}:8888']
         metric_relabel_configs:
           - source_labels: [ __name__ ]
             regex: 'otelcol_rpc_.*'
@@ -66,19 +66,19 @@ receivers:
             regex: 'otelcol_processor_batch_.*'
             action: drop
   sapm:
-    endpoint: 0.0.0.0:7276
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:7276"
     # Whether to preserve incoming access token and use instead of exporter token
     # default = false
     #access_token_passthrough: true
   signalfx:
-    endpoint: 0.0.0.0:9943
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:9943"
     # Whether to preserve incoming access token and use instead of exporter token
     # default = false
     #access_token_passthrough: true
   smartagent/processlist:
     type: processlist
   zipkin:
-    endpoint: 0.0.0.0:9411
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:9411"
 
 processors:
   batch:
@@ -146,7 +146,7 @@ exporters:
 service:
   telemetry:
     metrics:
-      address: "0.0.0.0:8888"
+      address: "${SPLUNK_LISTEN_INTERFACE}:8888"
   extensions: [health_check, http_forwarder, zpages]
   pipelines:
     traces:
@@ -164,7 +164,11 @@ service:
       receivers: [hostmetrics, prometheus/internal]
       processors: [memory_limiter, batch, resourcedetection/internal]
       exporters: [signalfx/internal]
-    logs:
-      receivers: [otlp, signalfx, smartagent/processlist]
+    logs/signalfx:
+      receivers: [signalfx, smartagent/processlist]
       processors: [memory_limiter, batch]
       exporters: [signalfx]
+    logs:
+      receivers: [otlp, smartagent/processlist]
+      processors: [memory_limiter, batch]
+      exporters: [splunk_hec, splunk_hec/profiling]
