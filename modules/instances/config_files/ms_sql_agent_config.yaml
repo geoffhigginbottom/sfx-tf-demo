@@ -243,11 +243,6 @@ exporters:
 
 service:
   telemetry:
-    logs:
-      encoding: json
-      level: "debug"
-      output_paths: [/media/data/logs/otel/collector.log]
-      error_output_paths: [/media/data/logs/otel/collector.log]
     metrics:
       address: "${SPLUNK_LISTEN_INTERFACE}:8888"
 
@@ -287,7 +282,7 @@ service:
       - smartagent/procstat-otel
       - smartagent/procstat-mssqlserver
       - smartagent/telegraf/win_perf_counters
-      - windowsperfcounters/memory
+#      - windowsperfcounters/memory # use to work, but now having issues
       - smartagent/ntp
       processors:
       - memory_limiter
