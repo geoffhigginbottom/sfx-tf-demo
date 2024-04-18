@@ -2,7 +2,6 @@ resource "aws_instance" "windows_server" {
   count                     = var.windows_server_count
   ami                       = var.windows_server_ami
   instance_type             = var.windows_server_instance_type
-  # subnet_id                 = element(var.public_subnet_ids, count.index)
   subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
   key_name                  = var.key_name
   vpc_security_group_ids    = [aws_security_group.instances_sg.id]
