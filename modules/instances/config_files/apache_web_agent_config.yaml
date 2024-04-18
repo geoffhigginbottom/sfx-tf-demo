@@ -128,15 +128,18 @@ processors:
         #key: deployment.environment
 
 exporters:
-  # Traces
+  # Send to gateway
+  otlphttp:
+    endpoint: http://${SPLUNK_GATEWAY_URL}:4318
   otlp:
-    # endpoint: "${SPLUNK_TRACE_URL}"
-    # headers:
-      # "X-SF-Token": "${SPLUNK_ACCESS_TOKEN}"
-    # When sending to gateway use
-    endpoint: "${SPLUNK_GATEWAY_URL}:4318" # changed from default 4317 as using AWS LB which only supports HTTP
+    endpoint: "${SPLUNK_GATEWAY_URL}:4317"
     tls:
       insecure: true
+
+  # Traces
+  sapm:
+    access_token: "${SPLUNK_ACCESS_TOKEN}"
+    endpoint: "${SPLUNK_TRACE_URL}"
   
   # Metrics + Events
   signalfx:
@@ -194,8 +197,12 @@ service:
       - memory_limiter
       - batch
       - resourcedetection
-      #- resource/add_environment
-      # exporters: [otlp, signalfx]
+      exporters:
+      # - sapm
+      # - signalfx
+      # Use instead when sending to gateway
+      - otlphttp
+      - signalfx
     
     metrics:
       receivers:
