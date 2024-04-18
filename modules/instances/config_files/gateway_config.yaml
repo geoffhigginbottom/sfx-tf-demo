@@ -11,16 +11,9 @@ extensions:
       endpoint: "https://api.${SPLUNK_REALM}.signalfx.com"
   zpages:
     endpoint: 0.0.0.0:55679
-  memory_ballast:
-    # In general, the ballast should be set to 1/3 of the collector's memory, the limit
-    # should be 90% of the collector's memory.
-    # The simplest way to specify the ballast size is set the value of SPLUNK_BALLAST_SIZE_MIB env variable.
-    size_mib: ${SPLUNK_BALLAST_SIZE_MIB}
 
 receivers:
     # GH Added Logs and Host Metrics Receiver to enable collection from the Gateway itself
-  fluentforward:
-    endpoint: 127.0.0.1:8006
   hostmetrics:
     collection_interval: 1s
     scrapers:
@@ -64,7 +57,13 @@ receivers:
         - targets: ['0.0.0.0:8888']
         metric_relabel_configs:
           - source_labels: [ __name__ ]
-            regex: '.*grpc_io.*'
+            regex: 'otelcol_rpc_.*'
+            action: drop
+          - source_labels: [ __name__ ]
+            regex: 'otelcol_http_.*'
+            action: drop
+          - source_labels: [ __name__ ]
+            regex: 'otelcol_processor_batch_.*'
             action: drop
   sapm:
     endpoint: 0.0.0.0:7276
@@ -129,19 +128,26 @@ exporters:
     realm: "${SPLUNK_REALM}"
     sync_host_metadata: true
   # Debug
-  #logging:
-    #loglevel: debug
-  
-  # GH Added splunk_hec to enable collection from the Gateway itself
+  #debug:
+    #verbosity: detailed
   # Logs
   splunk_hec:
     token: "${SPLUNK_HEC_TOKEN}"
     endpoint: "${SPLUNK_HEC_URL}"
     source: "otel"
     sourcetype: "otel"
+    profiling_data_enabled: false
+  # Profiling
+  splunk_hec/profiling:
+    token: "${SPLUNK_ACCESS_TOKEN}"
+    endpoint: "${SPLUNK_INGEST_URL}/v1/log"
+    log_data_enabled: false
   
 service:
-  extensions: [health_check, http_forwarder, zpages, memory_ballast]
+  telemetry:
+    metrics:
+      address: "0.0.0.0:8888"
+  extensions: [health_check, http_forwarder, zpages]
   pipelines:
     traces:
       receivers: [jaeger, otlp, sapm, zipkin]
