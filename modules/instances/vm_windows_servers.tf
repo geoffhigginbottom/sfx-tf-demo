@@ -17,9 +17,31 @@ resource "aws_instance" "windows_server" {
     realm = "${var.realm}";
     mode = "agent"};
     Invoke-Command -ScriptBlock ([scriptblock]::Create(". {$script} $(&{$args} @params)"))}
-
-    New-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Environment' -Name 'SPLUNK_GATEWAY_URL' -Value ${aws_lb.gateway-lb.dns_name}
    
+    $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Services\splunk-otel-collector"
+    $valueName = "Environment"
+    $newValue = @(
+        "SPLUNK_ACCESS_TOKEN=${var.access_token}",
+        "SPLUNK_API_URL=https://api.${var.realm}.signalfx.com",
+        "SPLUNK_BUNDLE_DIR=C:\Program Files\Splunk\OpenTelemetry Collector\agent-bundle",
+        "SPLUNK_CONFIG=C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml",
+        "SPLUNK_HEC_TOKEN=${var.access_token}",
+        "SPLUNK_HEC_URL=https://ingest.${var.realm}.signalfx.com/v1/log",
+        "SPLUNK_INGEST_URL=https://ingest.${var.realm}.signalfx.com",
+        "SPLUNK_REALM=${var.realm}",
+        "SPLUNK_TRACE_URL=https://ingest.${var.realm}.signalfx.com/v2/trace",
+        "SPLUNK_GATEWAY_URL=${aws_lb.gateway-lb.dns_name}"
+    )
+
+    # Check if the registry key exists
+    if (Test-Path $registryPath) {
+        # Update the registry value
+        Set-ItemProperty -Path $registryPath -Name $valueName -Value $newValue -Type MultiString
+        Write-Host "Registry value '$valueName' updated successfully."
+    } else {
+        Write-Host "Registry path '$registryPath' does not exist."
+    }
+
     Invoke-WebRequest -Uri ${var.windows_server_agent_url} -OutFile "C:\ProgramData\Splunk\OpenTelemetry Collector\agent_config.yaml"
     Stop-Service splunk-otel-collector
     Start-Service splunk-otel-collector
