@@ -36,20 +36,20 @@ receivers:
   jaeger:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:14250
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:14250"
       thrift_binary:
-        endpoint: 0.0.0.0:6832
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:6832"
       thrift_compact:
-        endpoint: 0.0.0.0:6831
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:6831"
       thrift_http:
-        endpoint: 0.0.0.0:14268
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:14268"
 
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:4317"
       http:
-        endpoint: 0.0.0.0:4318
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:4318"
   
   # This section is used to collect the OpenTelemetry Collector metrics
   # Even if just a Splunk APM customer, these metrics are included
@@ -88,14 +88,30 @@ receivers:
     endpoint: "${SPLUNK_LISTEN_INTERFACE}:9411"
   
   # MySQL Specific Receivers
-  smartagent/mysql:
-    type: collectd/mysql
-    host: 127.0.0.1
-    port: 3306
-    databases:
-      - name:
+  # smartagent/mysql:
+  #   type: collectd/mysql
+  #   host: 127.0.0.1
+  #   port: 3306
+  #   databases:
+  #     - name:
+  #   username: ${MYSQL_USER}
+  #   password: ${MYSQL_USER_PWD}
+
+  mysql:
+    endpoint: localhost:3306
     username: ${MYSQL_USER}
     password: ${MYSQL_USER_PWD}
+    collection_interval: 10s
+    initial_delay: 1s
+    statement_events:
+      digest_text_limit: 120
+      time_limit: 24h
+      limit: 250
+    metrics:
+      mysql.query.slow.count:
+        enabled: true
+      mysql.query.count:
+        enabled: true
 
 processors:
   batch:
@@ -204,7 +220,8 @@ service:
       - otlp
       - signalfx
       - smartagent/signalfx-forwarder
-      - smartagent/mysql
+      # - smartagent/mysql
+      - mysql
       processors:
       - memory_limiter
       - batch
